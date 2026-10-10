@@ -1,5 +1,8 @@
 # preleveldose
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23276258.svg)](https://doi.org/10.5281/zenodo.23276258)
+
+
 Stata tools for pre-level dose designs (version 0.6): a reporting template for
 designs whose dose is built from baseline composition, so that the dose is
 correlated with the outcome's own baseline level and mean reversion can load
@@ -443,5 +446,5 @@ welcome as GitHub issues.
 
 Licence: MIT (see `LICENSE`).
 
-Citation: see `CITATION.cff`. The method is from Tang, Gong and Chen (2026),
+Citation: see `CITATION.cff`; the software is archived at Zenodo, DOI [10.5281/zenodo.23276258](https://doi.org/10.5281/zenodo.23276258) (all versions; version 0.6 is [10.5281/zenodo.23276259](https://doi.org/10.5281/zenodo.23276259)). The method is from Tang, Gong and Chen (2026),
 unpublished manuscript.
