@@ -1,0 +1,13 @@
+{
+  "title": "preleveldose: a diagnostic for mean reversion in designs dosed by baseline composition",
+  "upload_type": "software",
+  "description": "Stata package implementing a reporting template for designs that dose units by a baseline composition and measure the outcome as a change in another summary of it: the bound on the mean-reversion channel relative to the coefficient, Fieller sets for ratios, the instrumented lever, and the distinction between own-level and proxy baseline controls. Version numbers converge to Galton's (1886) regression coefficient of two-thirds: 0.6, 0.66, 0.666.",
+  "creators": [
+    {"name": "Tang, Juk-Sen", "affiliation": "McGill University; Beijing Academy of Agriculture and Forestry Sciences", "orcid": "0009-0009-8849-874X"},
+    {"name": "Gong, Jing", "affiliation": "Beijing Academy of Agriculture and Forestry Sciences", "orcid": "0009-0001-5570-0819"},
+    {"name": "Chen, Junhong", "affiliation": "Beijing Academy of Agriculture and Forestry Sciences", "orcid": "0009-0007-7201-3408"}
+  ],
+  "license": "MIT",
+  "keywords": ["Stata", "regression to the mean", "shift-share designs", "sensitivity analysis", "Fieller"],
+  "version": "0.6"
+}

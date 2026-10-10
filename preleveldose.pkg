@@ -1,0 +1,23 @@
+v 3
+d preleveldose 0.6 - reporting template for pre-level dose designs: bound ratio, Fieller sets, IV side, own vs proxy control
+d Version scheme 0.6, 0.66, 0.666, ... converging to Galton's (1886) 2/3; see README.md
+d Requires Stata 15.1 or later
+f preleveldose.ado
+f preleveldose.sthlp
+f preleveldose_fieller.ado
+f preleveldose_fieller.sthlp
+f preleveldose_iv.ado
+f preleveldose_iv.sthlp
+
+f _preleveldose_tex.ado
+f preleveldose_collect.ado
+f preleveldose_collect.sthlp
+f preleveldose_table.ado
+f preleveldose_table.sthlp
+f _preleveldose_check.ado
+f preleveldose_infer.ado
+f preleveldose_infer.sthlp
+f preleveldose_docx.ado
+f preleveldose_docx.sthlp
+f preleveldose_ols.ado
+f preleveldose_ols.sthlp

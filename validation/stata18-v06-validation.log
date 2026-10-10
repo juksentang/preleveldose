@@ -1,0 +1,4232 @@
+Windows Stata 18 validation of preleveldose v0.6, run through the Stata MCP server on 2026-10-10.
+Plain batch mode (/e) stalled on the test machine; the MCP route ran tests/run.do to completion.
+
+-------------------------------------------------------------------------------
+      name:  pldvalidation
+       log:  C:\Users\A\AppData\Local\Temp\pld-trim2\tests/stata18-validation.l
+> og
+  log type:  text
+ opened on:  10 Oct 2026, 02:44:40
+
+. display "VALIDATION_ENVIRONMENT: Stata " c(stata_version)
+VALIDATION_ENVIRONMENT: Stata 18
+
+. do tests/run.do
+
+. version 15.1
+
+. clear all
+
+. set more off
+
+. adopath ++ "."
+  [1]              "."
+  [2]  (BASE)      "D:\Program Files\Stata 18/ado\base/"
+  [3]  (SITE)      "D:\Program Files\Stata 18/ado\site/"
+  [4]  (PERSONAL)  "C:\Users\A\ado\personal/"
+  [5]  (PLUS)      "C:\Users\A\ado\plus/"
+  [6]  (OLDPLACE)  "c:\ado/"
+
+. set obs 1
+Number of observations (_N) was 0, now 1.
+
+. 
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. assert reldif(r(kappa), .75) < 1e-12
+
+. assert reldif(r(anchor_gap), .25) < 1e-12
+
+. assert reldif(r(channel_bound), .5) < 1e-12
+
+. assert "`r(set_status)'" == "bounded"
+
+. 
+. preleveldose, beta(.4) rho(.8) b(.5) r2(.3) serho(.04) seb(.02) corr(-.4)
+Diagnostic moments: beta=          .4 R2=          .3 b=          .5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =           .3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .12   c_obs =          .28
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [        -1.6,           .4]   width =            2
+Endpoint delta SEs:      .120797      .0750467
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. scalar pos_L = r(L)
+
+. scalar pos_U = r(U)
+
+. scalar pos_sl = r(se_L)
+
+. scalar pos_su = r(se_U)
+
+. preleveldose, beta(-.4) rho(.8) b(-.5) r2(.3) serho(.04) seb(.02) corr(.4)
+Diagnostic moments: beta=         -.4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =           .3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =         -.28
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:     .0750467       .120797
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. assert reldif(r(L), -pos_U) < 1e-12
+
+. assert reldif(r(U), -pos_L) < 1e-12
+
+. assert reldif(r(se_L), pos_su) < 1e-12
+
+. assert reldif(r(se_U), pos_sl) < 1e-12
+
+. assert r(dU_drhohi) == 0
+
+. assert r(dL_drhohi) == -2
+
+. 
+. preleveldose, beta(.4) rho(.5) b(0) r2(0)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert "`r(set_status)'" == "all_real"
+
+. assert missing(r(L)) & missing(r(U)) & missing(r(width))
+
+. assert r(kappa) == 0
+
+. assert r(c_obs) == .4
+
+. preleveldose, beta(.4) rho(2) b(0) r2(0)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>          2
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: empty
+Persistence restriction is incompatible with the supplied moments.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert "`r(set_status)'" == "empty"
+
+. assert "`r(se_status)'" == "unavailable_zero_b"
+
+. preleveldose, beta(0) rho(.5) b(1) r2(.5)
+Diagnostic moments: beta=           0 R2=          .5 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            . (           . percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            . (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .25   c_obs =         -.25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. assert missing(r(anchor_share))
+
+. 
+. capture preleveldose, beta(1) rho(.5) b(0) r2(.5)
+
+. assert _rc == 198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) serho(.1)
+
+. assert _rc == 198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) rholo(2) rhohi(1)
+
+. assert _rc == 198
+
+. capture preleveldose, beta(1) rho(.) b(1) r2(.5)
+
+. assert _rc == 198
+
+. 
+. // Machine-generated commands compare numerical outputs with Python toolkit.
+. do tests/reference_assertions.do
+
+. // Generated by make_reference.py; run in Stata via tests/run.do.
+. quietly preleveldose, beta(1) rho(-0.5) b(1) r2(0.5) rholo(0) rhohi(2) serho(
+> 0.040000000000000001) seb(0.02) corr(-0.40000000000000002)
+
+. assert reldif(r(kappa), 0.75) < 1e-9
+
+. assert reldif(r(c_obs), 0.25) < 1e-9
+
+. assert reldif(r(anchor_share), 0.75) < 1e-9
+
+. assert reldif(r(anchor_gap), 0.25) < 1e-9
+
+. assert reldif(r(L), 0.5) < 1e-9
+
+. assert reldif(r(U), 2.5) < 1e-9
+
+. assert reldif(r(width), 2) < 1e-9
+
+. assert reldif(r(dU_drhohi), 1) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.037148351242013419) < 1e-9
+
+. assert reldif(r(se_U), 0.050000000000000003) < 1e-9
+
+. assert reldif(r(se_width), 0.040000000000000001) < 1e-9
+
+. assert reldif(r(corr_LU), 0.61375536834630862) < 1e-9
+
+. quietly preleveldose, beta(0.27653770092449842) rho(0.67552534025691813) b(0.
+> 79535923299849298) r2(0.91058571986099268) rholo(-0.4562533261437649) rhohi(1
+> .1281311185827545) serho(0.093348208974005795) seb(0.032198555085442962) corr
+> (0.61339308603890819)
+
+. assert reldif(r(kappa), 0.37148244385737167) < 1e-9
+
+. assert reldif(r(c_obs), -0.09494474293287325) < 1e-9
+
+. assert reldif(r(anchor_share), 1.3433338116844888) < 1e-9
+
+. assert reldif(r(anchor_gap), 0.43274809182349616) < 1e-9
+
+. assert reldif(r(L), -1.4229779695068021) < 1e-9
+
+. assert reldif(r(U), 0.56905830667171486) < 1e-9
+
+. assert reldif(r(width), 1.9920362761785171) < 1e-9
+
+. assert reldif(r(dU_drhohi), 1.2572935077776293) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.093802706969779298) < 1e-9
+
+. assert reldif(r(se_U), 0.13274969769173986) < 1e-9
+
+. assert reldif(r(se_width), 0.080643672833123681) < 1e-9
+
+. assert reldif(r(corr_LU), 0.79977427892285002) < 1e-9
+
+. quietly preleveldose, beta(0.58766676507682092) rho(0.10675307551497171) b(-0
+> .76327099378366969) r2(0.41927506995568398) rholo(-0.012293961195317116) rhoh
+> i(1.066919774639763) serho(0.13904268645312506) seb(0.019601250477436244) cor
+> r(0.74610912822190445)
+
+. assert reldif(r(kappa), -0.49067260488259445) < 1e-9
+
+. assert reldif(r(c_obs), 1.0783393699594153) < 1e-9
+
+. assert reldif(r(anchor_share), -0.83495040734259118) < 1e-9
+
+. assert reldif(r(anchor_gap), -1.254225477298275) < 1e-9
+
+. assert reldif(r(L), -1.257963039267449) < 1e-9
+
+. assert reldif(r(U), 0.15596955429964859) < 1e-9
+
+. assert reldif(r(width), 1.4139325935670977) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -1.3101506648940275) < 1e-9
+
+. assert reldif(r(se_L), 0.15952045634854545) < 1e-9
+
+. assert reldif(r(se_U), 0.1851745316614844) < 1e-9
+
+. assert reldif(r(se_width), 0.036310625125857754) < 1e-9
+
+. assert reldif(r(corr_LU), 0.98882279182098254) < 1e-9
+
+. quietly preleveldose, beta(1.7560366728972658) rho(-0.26213663136116322) b(1.
+> 8988649237305768) r2(0.027575894855800615) rholo(0.21395088631870074) rhohi(1
+> .1917079750456803) serho(0.014581896190627001) seb(0.099661711709976272) corr
+> (-0.52398227362190197)
+
+. assert reldif(r(kappa), 0.018329132633453243) < 1e-9
+
+. assert reldif(r(c_obs), 1.7377075402638127) < 1e-9
+
+. assert reldif(r(anchor_share), 0.010437784652419705) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.017138110203380907) < 1e-9
+
+. assert reldif(r(L), 0.25072216129229757) < 1e-9
+
+. assert reldif(r(U), 0.76563877095089483) < 1e-9
+
+. assert reldif(r(width), 0.51491660965859731) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0.52663040298588737) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.011235405529354273) < 1e-9
+
+. assert reldif(r(se_U), 0.0367474323766789) < 1e-9
+
+. assert reldif(r(se_width), 0.027025340278366616) < 1e-9
+
+. assert reldif(r(corr_LU), 0.90371659426350381) < 1e-9
+
+. quietly preleveldose, beta(0.71667268115587301) rho(0.075142222302948425) b(-
+> 0.2372484844710388) r2(0.056999651122183095) rholo(-0.40332833748941466) rhoh
+> i(-0.15220773603763105) serho(0.074496819250302257) seb(0.023989044382981949)
+>  corr(0.79253205276186589)
+
+. assert reldif(r(kappa), -0.22219982051267723) < 1e-9
+
+. assert reldif(r(c_obs), 0.93887250166855019) < 1e-9
+
+. assert reldif(r(anchor_share), -0.31004365919781696) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.36704331032000004) < 1e-9
+
+. assert reldif(r(L), 0.95827781090981989) < 1e-9
+
+. assert reldif(r(U), 2.0167486458728909) < 1e-9
+
+. assert reldif(r(width), 1.0584708349630709) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -4.2149900440020351) < 1e-9
+
+. assert reldif(r(se_L), 0.39523767090591605) < 1e-9
+
+. assert reldif(r(se_U), 0.49160575829706954) < 1e-9
+
+. assert reldif(r(se_width), 0.10702577887750707) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99442177910848417) < 1e-9
+
+. quietly preleveldose, beta(1.5810478572645277) rho(0.6425768161088814) b(0.73
+> 308913778978035) r2(0.67804692830987046) rholo(-0.11651161454993142) rhohi(1.
+> 5933930476991365) serho(0.11797629093384641) seb(0.083391487067402625) corr(0
+> .7431107131349356)
+
+. assert reldif(r(kappa), 0.33058693609180551) < 1e-9
+
+. assert reldif(r(c_obs), 1.2504609211727222) < 1e-9
+
+. assert reldif(r(anchor_share), 0.20909356701180137) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.46895336129806908) < 1e-9
+
+. assert reldif(r(L), -1.0354653909447067) < 1e-9
+
+. assert reldif(r(U), 1.2969994814776671) < 1e-9
+
+. assert reldif(r(width), 2.3324648724223738) < 1e-9
+
+. assert reldif(r(dU_drhohi), 1.3640905975157944) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.10770458117853536) < 1e-9
+
+. assert reldif(r(se_U), 0.28801745672777801) < 1e-9
+
+. assert reldif(r(se_width), 0.26532614414423106) < 1e-9
+
+. assert reldif(r(corr_LU), 0.38935762087950843) < 1e-9
+
+. quietly preleveldose, beta(1.8822019596787214) rho(-0.17574171560779323) b(-1
+> .2998232479239742) r2(0.66106532817327124) rholo(0.097005474177864648) rhohi(
+> 0.3694778273346585) serho(0.14111665871929913) seb(0.018717114491111853) corr
+> (-0.4081765657316887)
+
+. assert reldif(r(kappa), -0.59795982593529606) < 1e-9
+
+. assert reldif(r(c_obs), 2.4801617856140172) < 1e-9
+
+. assert reldif(r(anchor_share), -0.31769163923161764) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.97875696740488882) < 1e-9
+
+. assert reldif(r(L), -0.41945667906252226) < 1e-9
+
+. assert reldif(r(U), -0.20983406030110541) < 1e-9
+
+. assert reldif(r(width), 0.20962261876141686) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -0.76933537047991729) < 1e-9
+
+. assert reldif(r(se_L), 0.11116828293164456) < 1e-9
+
+. assert reldif(r(se_U), 0.10983400780801168) < 1e-9
+
+. assert reldif(r(se_width), 0.0030185108333387928) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99969979186371993) < 1e-9
+
+. quietly preleveldose, beta(1.8844397250118081) rho(-0.17330336076416275) b(0.
+> 91241791244798054) r2(0.59134223354105431) rholo(-0.33629675319894703) rhohi(
+> 0.68623623425074809) serho(0.1415599469655025) seb(0.025330292648359599) corr
+> (0.72844797434656161)
+
+. assert reldif(r(kappa), 0.76042328905403012) < 1e-9
+
+. assert reldif(r(c_obs), 1.124016435957778) < 1e-9
+
+. assert reldif(r(anchor_share), 0.40352752012233517) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.18781471341871914) < 1e-9
+
+. assert reldif(r(L), -0.17863896599473761) < 1e-9
+
+. assert reldif(r(U), 0.94204594549092169) < 1e-9
+
+. assert reldif(r(width), 1.1206849114856594) < 1e-9
+
+. assert reldif(r(dU_drhohi), 1.0959890049911891) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.15157362004841407) < 1e-9
+
+. assert reldif(r(se_U), 0.17511813546914903) < 1e-9
+
+. assert reldif(r(se_width), 0.031112143226529613) < 1e-9
+
+. assert reldif(r(corr_LU), 0.9922085533863565) < 1e-9
+
+. quietly preleveldose, beta(1.6587599490205256) rho(0.66830472855647649) b(-1.
+> 533663778116368) r2(0.42659937404443121) rholo(0.31563939361614157) rhohi(0.4
+> 7730053703596476) serho(0.11168990280585121) seb(0.069695483485927454) corr(-
+> 0.55776996686655078)
+
+. assert reldif(r(kappa), -0.092263374274311333) < 1e-9
+
+. assert reldif(r(c_obs), 1.7510233232948369) < 1e-9
+
+. assert reldif(r(anchor_share), -0.055621896543132453) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.48222127058756364) < 1e-9
+
+. assert reldif(r(L), 0.12454111145214719) < 1e-9
+
+. assert reldif(r(U), 0.2299495756321997) < 1e-9
+
+. assert reldif(r(width), 0.10540846418005251) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -0.65203339497799895) < 1e-9
+
+. assert reldif(r(se_L), 0.069826965791019838) < 1e-9
+
+. assert reldif(r(se_U), 0.067556051699962955) < 1e-9
+
+. assert reldif(r(se_width), 0.004790159342199971) < 1e-9
+
+. assert reldif(r(corr_LU), 0.998114512095858) < 1e-9
+
+. quietly preleveldose, beta(1.1765693895502956) rho(1.5525575012415369) b(0.32
+> 314116672324322) r2(0.82299576032330468) rholo(-0.43068053643121029) rhohi(0.
+> 096593351955364004) serho(0.074263543163029189) seb(0.044750344551081192) cor
+> r(0.63286680778252935)
+
+. assert reldif(r(kappa), -1.4072873644294921) < 1e-9
+
+. assert reldif(r(c_obs), 2.5838567539797879) < 1e-9
+
+. assert reldif(r(anchor_share), -1.1960938104699297) < 1e-9
+
+. assert reldif(r(anchor_gap), -2.0190895707932341) < 1e-9
+
+. assert reldif(r(L), -6.1373735132029985) < 1e-9
+
+. assert reldif(r(U), -4.5056597525165989) < 1e-9
+
+. assert reldif(r(width), 1.6317137606864003) < 1e-9
+
+. assert reldif(r(dU_drhohi), 3.0946227314220778) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.72661709938544206) < 1e-9
+
+. assert reldif(r(se_U), 0.51053667287162519) < 1e-9
+
+. assert reldif(r(se_width), 0.2259685874749445) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99410853366716934) < 1e-9
+
+. quietly preleveldose, beta(1.8958431821575557) rho(0.042489756737831175) b(-0
+> .66267351615418402) r2(0.072691289496318756) rholo(0.11061773149869136) rhohi
+> (1.8374540737686405) serho(0.14269927432344723) seb(0.037083581713310172) cor
+> r(0.85483092087072909)
+
+. assert reldif(r(kappa), -0.10503310090404532) < 1e-9
+
+. assert reldif(r(c_obs), 2.0008762830616011) < 1e-9
+
+. assert reldif(r(anchor_share), -0.055401787390723357) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.12809307688704211) < 1e-9
+
+. assert reldif(r(L), -2.7086706700576451) < 1e-9
+
+. assert reldif(r(U), -0.10280775238497517) < 1e-9
+
+. assert reldif(r(width), 2.60586291767267) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -1.5090387281560387) < 1e-9
+
+. assert reldif(r(se_L), 0.11637095526797236) < 1e-9
+
+. assert reldif(r(se_U), 0.2104419121934073) < 1e-9
+
+. assert reldif(r(se_width), 0.14582555072068906) < 1e-9
+
+. assert reldif(r(corr_LU), 0.74650698576811014) < 1e-9
+
+. quietly preleveldose, beta(1.1264884001276827) rho(1.1772671876093368) b(1.43
+> 8032114553105) r2(0.43006988349748404) rholo(0.45729258510851523) rhohi(2.109
+> 8427968900753) serho(0.048971734883104384) seb(0.010913140796366981) corr(0.0
+> 7027607107011058)
+
+. assert reldif(r(kappa), -0.05301500429061437) < 1e-9
+
+. assert reldif(r(c_obs), 1.179503404418297) < 1e-9
+
+. assert reldif(r(anchor_share), -0.0470621839378065) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.47713206743529052) < 1e-9
+
+. assert reldif(r(L), -0.5006665673280648) < 1e-9
+
+. assert reldif(r(U), 0.64850819383164715) < 1e-9
+
+. assert reldif(r(width), 1.1491747611597121) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0.69539476196661187) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.033999586748563702) < 1e-9
+
+. assert reldif(r(se_U), 0.034749091365220829) < 1e-9
+
+. assert reldif(r(se_width), 0.0087210193995317792) < 1e-9
+
+. assert reldif(r(corr_LU), 0.9680502268780542) < 1e-9
+
+. quietly preleveldose, beta(0.37523508467991185) rho(1.2240440678288484) b(-0.
+> 58211525965770494) r2(0.18417664808999623) rholo(0.26017974358159157) rhohi(0
+> .52996373470126401) serho(0.058679317531902371) seb(0.04683367189472961) corr
+> (0.26358079732927775)
+
+. assert reldif(r(kappa), 0.070885764893758182) < 1e-9
+
+. assert reldif(r(c_obs), 0.30434931978615365) < 1e-9
+
+. assert reldif(r(anchor_share), 0.18891027994950452) < 1e-9
+
+. assert reldif(r(anchor_gap), 0.004733631859508286) < 1e-9
+
+. assert reldif(r(L), 1.1923417598358736) < 1e-9
+
+. assert reldif(r(U), 1.6557963534816589) < 1e-9
+
+. assert reldif(r(width), 0.46345459364578528) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -1.7178728497652156) < 1e-9
+
+. assert reldif(r(se_L), 0.15640137593279085) < 1e-9
+
+. assert reldif(r(se_U), 0.18704789818291812) < 1e-9
+
+. assert reldif(r(se_width), 0.037286911856038725) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99229001145657758) < 1e-9
+
+. quietly preleveldose, beta(0.75726369831940554) rho(-0.22019673085842306) b(0
+> .87440618089841182) r2(0.042628671377879242) rholo(-0.12131513483518264) rhoh
+> i(1.0922263993902526) serho(0.052388118685715551) seb(0.065137586518503307) c
+> orr(0.69535457474052731)
+
+. assert reldif(r(kappa), 0.059486502488675125) < 1e-9
+
+. assert reldif(r(c_obs), 0.69777719583073039) < 1e-9
+
+. assert reldif(r(anchor_share), 0.078554541331762567) < 1e-9
+
+. assert reldif(r(anchor_gap), 0.035925869953883326) < 1e-9
+
+. assert reldif(r(L), 0.11308428300637602) < 1e-9
+
+. assert reldif(r(U), 1.5009307561163643) < 1e-9
+
+. assert reldif(r(width), 1.3878464731099882) < 1e-9
+
+. assert reldif(r(dU_drhohi), 1.1436332700353815) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.066048541071200464) < 1e-9
+
+. assert reldif(r(se_U), 0.1593958860407812) < 1e-9
+
+. assert reldif(r(se_width), 0.10338555661136649) < 1e-9
+
+. assert reldif(r(corr_LU), 0.90620860132444303) < 1e-9
+
+. quietly preleveldose, beta(1.2785728771539466) rho(0.17497251661136426) b(-0.
+> 26872632617114833) r2(0.41333835740847102) rholo(0.010831099747714457) rhohi(
+> 1.8931192597404349) serho(0.10973054320030697) seb(0.016800039958292708) corr
+> (-0.10879797982097827)
+
+. assert reldif(r(kappa), -1.2690066866895464) < 1e-9
+
+. assert reldif(r(c_obs), 2.547579563843493) < 1e-9
+
+. assert reldif(r(anchor_share), -0.99251807180072971) < 1e-9
+
+. assert reldif(r(anchor_gap), -1.4058564292092006) < 1e-9
+
+. assert reldif(r(L), -6.3936673701065114) < 1e-9
+
+. assert reldif(r(U), 0.61081256608669687) < 1e-9
+
+. assert reldif(r(width), 7.0044799361932082) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -3.721258033212246) < 1e-9
+
+. assert reldif(r(se_L), 0.60168546482109386) < 1e-9
+
+. assert reldif(r(se_U), 0.40595969279430866) < 1e-9
+
+. assert reldif(r(se_width), 0.43790105901332282) < 1e-9
+
+. assert reldif(r(corr_LU), 0.68589058694836003) < 1e-9
+
+. quietly preleveldose, beta(0.47459204728477655) rho(1.3891334966226774) b(1.8
+> 809074863019892) r2(0.2097350172678405) rholo(0.45036180066791476) rhohi(0.74
+> 818463291483961) serho(0.062123196214148864) seb(0.011767024053031002) corr(0
+> .15683655802014329)
+
+. assert reldif(r(kappa), -0.043391246633886119) < 1e-9
+
+. assert reldif(r(c_obs), 0.51798329391866271) < 1e-9
+
+. assert reldif(r(anchor_share), -0.091428516095318005) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.30116353336315849) < 1e-9
+
+. assert reldif(r(L), -0.49910572571565492) < 1e-9
+
+. assert reldif(r(U), -0.34076575715480467) < 1e-9
+
+. assert reldif(r(width), 0.15833996856085025) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0.53165825926190446) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.032684403271116977) < 1e-9
+
+. assert reldif(r(se_U), 0.032761684173477724) < 1e-9
+
+. assert reldif(r(se_width), 0.00099058046830090263) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99954460175531668) < 1e-9
+
+. quietly preleveldose, beta(1.1563078578937018) rho(-0.099087572504621801) b(-
+> 1.825370438726204) r2(0.27016255532445865) rholo(-0.20274948156189365) rhohi(
+> 1.1253824403923836) serho(0.076494251651127679) seb(0.064470160330827184) cor
+> r(-0.42497765908875712)
+
+. assert reldif(r(kappa), -0.16266961533594942) < 1e-9
+
+. assert reldif(r(c_obs), 1.3189774732296513) < 1e-9
+
+. assert reldif(r(anchor_share), -0.14068019535235526) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.41084275067681392) < 1e-9
+
+. assert reldif(r(L), -0.67080631247182676) < 1e-9
+
+. assert reldif(r(U), 0.056789518915190781) < 1e-9
+
+. assert reldif(r(width), 0.72759583138701756) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -0.54783400606499844) < 1e-9
+
+. assert reldif(r(se_L), 0.056225624612816098) < 1e-9
+
+. assert reldif(r(se_U), 0.041093883286220032) < 1e-9
+
+. assert reldif(r(se_width), 0.025697918028242218) < 1e-9
+
+. assert reldif(r(corr_LU), 0.9066418669276799) < 1e-9
+
+. quietly preleveldose, beta(0.4947980500350323) rho(0.41238719162667903) b(1.8
+> 717476057975539) r2(0.96507804362152716) rholo(0.28986920683262818) rhohi(0.6
+> 9513240032110934) serho(0.11113547062379825) seb(0.027520689895102535) corr(-
+> 0.40710406440257024)
+
+. assert reldif(r(kappa), 0.30297472680363718) < 1e-9
+
+. assert reldif(r(c_obs), 0.19182332323139512) < 1e-9
+
+. assert reldif(r(anchor_share), 0.61231996929289878) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.35275807432862838) < 1e-9
+
+. assert reldif(r(L), -0.065456466680958184) < 1e-9
+
+. assert reldif(r(U), 0.15105947394758507) < 1e-9
+
+. assert reldif(r(width), 0.21651594062854326) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0.53426006631588496) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.059773513209997874) < 1e-9
+
+. assert reldif(r(se_U), 0.05850622417943098) < 1e-9
+
+. assert reldif(r(se_width), 0.0031834783925611459) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99878063850591725) < 1e-9
+
+. quietly preleveldose, beta(0.90014793045805908) rho(0.27702936562588398) b(-0
+> .52777185747405009) r2(0.065417195300960504) rholo(0.36955470443263905) rhohi
+> (1.1753907080714543) serho(0.14931107983222147) seb(0.025296338529603481) cor
+> r(0.52760782279323848)
+
+. assert reldif(r(kappa), -0.089612036935933601) < 1e-9
+
+. assert reldif(r(c_obs), 0.98975996739399263) < 1e-9
+
+. assert reldif(r(anchor_share), -0.099552566754591815) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.1649697620555523) < 1e-9
+
+. assert reldif(r(L), -1.7021774270897756) < 1e-9
+
+. assert reldif(r(U), -0.17531313482607289) < 1e-9
+
+. assert reldif(r(width), 1.5268642922637026) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -1.8947580963980613) < 1e-9
+
+. assert reldif(r(se_L), 0.24967497741878314) < 1e-9
+
+. assert reldif(r(se_U), 0.27856644538233738) < 1e-9
+
+. assert reldif(r(se_width), 0.073183280765903955) < 1e-9
+
+. assert reldif(r(corr_LU), 0.9674981592652836) < 1e-9
+
+. quietly preleveldose, beta(1.9324749482249202) rho(1.9337751536686931) b(1.84
+> 68993315423339) r2(0.39947742447511514) rholo(0.43489775314245882) rhohi(0.95
+> 353111578670724) serho(0.083175547096186311) seb(0.023924723167419292) corr(0
+> .52027312030536332)
+
+. assert reldif(r(kappa), -0.20197207668861736) < 1e-9
+
+. assert reldif(r(c_obs), 2.1344470249135377) < 1e-9
+
+. assert reldif(r(anchor_share), -0.10451471925891682) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.50399214373403201) < 1e-9
+
+. assert reldif(r(L), -0.81156421193489259) < 1e-9
+
+. assert reldif(r(U), -0.53075120075082294) < 1e-9
+
+. assert reldif(r(width), 0.28081301118406976) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0.54144802747040166) < 1e-9
+
+. assert reldif(r(dL_drhohi), 0) < 1e-9
+
+. assert reldif(r(se_L), 0.040571460649176119) < 1e-9
+
+. assert reldif(r(se_U), 0.041871894092537464) < 1e-9
+
+. assert reldif(r(se_width), 0.0036376501088328478) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99660308904693951) < 1e-9
+
+. quietly preleveldose, beta(1.8362891343043104) rho(-0.4025860654279127) b(-1.
+> 5147042336337619) r2(0.15777026678165113) rholo(0.34468899344980009) rhohi(0.
+> 6043392262871552) serho(0.095888013069747174) seb(0.020335991771668074) corr(
+> -0.63177437563335315)
+
+. assert reldif(r(kappa), -0.14609213654597381) < 1e-9
+
+. assert reldif(r(c_obs), 1.9823812708502841) < 1e-9
+
+. assert reldif(r(anchor_share), -0.07955835157807091) < 1e-9
+
+. assert reldif(r(anchor_gap), -0.23732861835972202) < 1e-9
+
+. assert reldif(r(L), -0.66476693558812017) < 1e-9
+
+. assert reldif(r(U), -0.49334717780844028) < 1e-9
+
+. assert reldif(r(width), 0.17141975777967988) < 1e-9
+
+. assert reldif(r(dU_drhohi), 0) < 1e-9
+
+. assert reldif(r(dL_drhohi), -0.6601948933627847) < 1e-9
+
+. assert reldif(r(se_L), 0.069289585409800666) < 1e-9
+
+. assert reldif(r(se_U), 0.06768437180405705) < 1e-9
+
+. assert reldif(r(se_width), 0.0023014333137143495) < 1e-9
+
+. assert reldif(r(corr_LU), 0.99971002262537734) < 1e-9
+
+. 
+end of do-file
+
+. do tests/template_assertions.do
+
+. // Generated by make_reference.py (v0.6 template); run via tests/run.do.
+. // Expected values come from Python (prelevel_dose.py; synthetic IV designs: 
+> an independent
+. // NumPy implementation in make_reference.py); Stata was NOT run to make them
+> .
+. quietly preleveldose_fieller, n(1) d(2) vn(0.040000000000000001) vd(0.0899999
+> 99999999997) cov(0.01) level(95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), 0.29900509092569244) < 1e-9
+
+. assert reldif(r(hi), 0.77458066290706584) < 1e-9
+
+. assert reldif(r(estimate), 0.5) < 1e-9
+
+. quietly preleveldose_fieller, n(3) d(0.29999999999999999) vn(0.25) vd(0.25) c
+> ov(0) level(95)
+
+. assert "`r(shape)'" == "two_rays"
+
+. assert reldif(r(lo), -4.2443990825484592) < 1e-9
+
+. assert reldif(r(hi), 2.1763005150162198) < 1e-9
+
+. assert reldif(r(estimate), 10) < 1e-9
+
+. quietly preleveldose_fieller, n(0.10000000000000001) d(0.10000000000000001) v
+> n(1) vd(1) cov(0) level(95)
+
+. assert "`r(shape)'" == "whole_line"
+
+. assert missing(r(lo))
+
+. assert missing(r(hi))
+
+. assert reldif(r(estimate), 1) < 1e-9
+
+. quietly preleveldose_fieller, n(-0.69999999999999996) d(-1.3) vn(0.0400000000
+> 00000001) vd(0.25) cov(-0.029999999999999999) level(90)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), 0.21657362336111211) < 1e-9
+
+. assert reldif(r(hi), 1.7391337172422363) < 1e-9
+
+. assert reldif(r(estimate), 0.53846153846153844) < 1e-9
+
+. quietly preleveldose_fieller, n(0.8115499682075753) d(-0.80987625468653013) v
+> n(0.1672368230627784) vd(0.067519644474689236) cov(0.066757843434500627) leve
+> l(95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -4.5996712622556029) < 1e-9
+
+. assert reldif(r(hi), -0.0088711513449868506) < 1e-9
+
+. assert reldif(r(estimate), -1.0020666287119295) < 1e-9
+
+. quietly preleveldose_fieller, n(-2.3276311119835769) d(0.75274207010960004) v
+> n(2.2064525190968149) vd(0.74503332093377284) cov(0.67337810209149263) level(
+> 95)
+
+. assert "`r(shape)'" == "two_rays"
+
+. assert reldif(r(lo), 0.39333570006092489) < 1e-9
+
+. assert reldif(r(hi), 3.3871566570624014) < 1e-9
+
+. assert reldif(r(estimate), -3.0922027669380445) < 1e-9
+
+. quietly preleveldose_fieller, n(0.43942005332990342) d(-0.18841447593508229) 
+> vn(1.7448111508472408) vd(0.10624781492117791) cov(-0.1287312082860266) level
+> (95)
+
+. assert "`r(shape)'" == "whole_line"
+
+. assert missing(r(lo))
+
+. assert missing(r(hi))
+
+. assert reldif(r(estimate), -2.3321990051406902) < 1e-9
+
+. quietly preleveldose_fieller, n(-0.23524183163645307) d(-0.082876153365675886
+> ) vn(0.051817698083510368) vd(0.41806303800859879) cov(-0.067243869335638889)
+>  level(95)
+
+. assert "`r(shape)'" == "whole_line"
+
+. assert missing(r(lo))
+
+. assert missing(r(hi))
+
+. assert reldif(r(estimate), 2.8384743027163855) < 1e-9
+
+. quietly preleveldose_fieller, n(-0.10876151113644951) d(-0.600026119629129) v
+> n(0.68960765174266825) vd(1.7945268809047497) cov(0.87527517477582339) level(
+> 95)
+
+. assert "`r(shape)'" == "whole_line"
+
+. assert missing(r(lo))
+
+. assert missing(r(hi))
+
+. assert reldif(r(estimate), 0.18126129443110589) < 1e-9
+
+. quietly preleveldose_fieller, n(-1.0493571746061328) d(-1.7701385343621714) v
+> n(0.067719897610616919) vd(0.33459506631127411) cov(0.12602355660142295) leve
+> l(95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), 0.43138094377365344) < 1e-9
+
+. assert reldif(r(hi), 1.0549293521289993) < 1e-9
+
+. assert reldif(r(estimate), 0.59281076268092459) < 1e-9
+
+. quietly preleveldose_fieller, n(2.3241139639107367) d(-1.0037831190915145) vn
+> (0.2558581773732605) vd(4.926959452991678) cov(0.47601384581450706) level(95)
+
+. assert "`r(shape)'" == "two_rays"
+
+. assert reldif(r(lo), -0.3159613233711806) < 1e-9
+
+. assert reldif(r(hi), 0.78043628937125786) < 1e-9
+
+. assert reldif(r(estimate), -2.3153547013364828) < 1e-9
+
+. quietly preleveldose_fieller, n(0.0028615305222715864) d(-1.0211409390408772)
+>  vn(0.93650512130470664) vd(0.12467322243950213) cov(-0.30043557886291322) le
+> vel(95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -1.2062338653288871) < 1e-9
+
+. assert reldif(r(hi), 5.2898992427487777) < 1e-9
+
+. assert reldif(r(estimate), -0.0028022875323746436) < 1e-9
+
+. quietly preleveldose_fieller, n(-1.2268566361715789) d(1.4792520293661875) vn
+> (0.15762833340555463) vd(0.047237319376975465) cov(0.025421298551233568) leve
+> l(95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -1.6312412590887622) < 1e-9
+
+. assert reldif(r(hi), -0.27483331965613428) < 1e-9
+
+. assert reldif(r(estimate), -0.82937634143199246) < 1e-9
+
+. quietly preleveldose_fieller, n(-3.1622891392757961) d(2.3854766388324893) vn
+> (0.76342422916194563) vd(0.62565459777220611) cov(0.32803967943303414) level(
+> 95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -4.919523833491386) < 1e-9
+
+. assert reldif(r(hi), -0.43704679182954059) < 1e-9
+
+. assert reldif(r(estimate), -1.3256424681750385) < 1e-9
+
+. quietly preleveldose_fieller, n(1.8410179396830237) d(0.074775283496317291) v
+> n(0.26903313778334276) vd(0.14743973069229077) cov(-0.17380633072372748) leve
+> l(95)
+
+. assert "`r(shape)'" == "two_rays"
+
+. assert reldif(r(lo), -3.9387077894986962) < 1e-9
+
+. assert reldif(r(hi), 1.066583886000487) < 1e-9
+
+. assert reldif(r(estimate), 24.620674821964325) < 1e-9
+
+. quietly preleveldose_fieller, n(2.4119189237471588) d(-1.6072422111042108) vn
+> (1.4469740214176854) vd(0.48436296807161267) cov(-0.48430742032696728) level(
+> 95)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -5.515400951790955) < 1e-9
+
+. assert reldif(r(hi), -0.064955007513621613) < 1e-9
+
+. assert reldif(r(estimate), -1.5006567815874605) < 1e-9
+
+. quietly preleveldose_fieller, n(2.2330974593310371) d(0.9944693477308898) vn(
+> 0.067259443283919584) vd(0.29630987132514602) cov(0.058583792908653301) level
+> (95)
+
+. assert "`r(shape)'" == "two_rays"
+
+. assert reldif(r(lo), -27.87169978193953) < 1e-9
+
+. assert reldif(r(hi), 1.1363367138373148) < 1e-9
+
+. assert reldif(r(estimate), 2.2455166309814998) < 1e-9
+
+. quietly preleveldose_fieller, n(0.7) d(-1.3) sen(0.2) sed(0.5) corr(-0.3)
+
+. assert "`r(shape)'" == "bounded"
+
+. assert reldif(r(lo), -1.9410120266266817) < 1e-9
+
+. assert reldif(r(hi), -0.23749068839944698) < 1e-9
+
+. quietly preleveldose, beta(0.35337750825925285) rho(1.0617461165784225) b(-0.
+> 65064111881176001) r2(0.39204926761373909) rholo(-0.29999999999999999) rhohi(
+> 1.2) serho(0.093980474196509109) seb(0.21874363587753565) corr(-0.40835808713
+> 866084) seg(0.958161041504629) sebeta(0.56101559531924095) corrgb(0.689710214
+> 57753934) rhobench(0.84328526210558086) sebench(0.045946994835742591) corrbrh
+> o(-0.099821768253135434) corrbb(0.030400029874731727)
+
+. assert reldif(r(bound_ratio), 2.2166829916341411) < 1e-9
+
+. assert reldif(r(anchor_ratio), 2.2166829916341411) < 1e-9
+
+. assert reldif(r(g), 0.60255839398795308) < 1e-9
+
+. assert reldif(r(gb_ratio), 1.7051407627954931) < 1e-9
+
+. assert "`r(gb_shape)'" == "whole_line"
+
+. assert missing(r(gb_lo))
+
+. assert missing(r(gb_hi))
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), 0.33576244746383083) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), 0.011055845340991636) < 1e-9
+
+. assert reldif(r(tau_hi), 0.89671950638842102) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.92762111889253107) rho(0.56314368286528471) b(0.
+> 34202199355614649) r2(0.65956719786242268) rholo(-0.29999999999999999) rhohi(
+> 2) serho(0.098258862069279668) seb(0.57420585212920916) corr(-0.4893056597479
+> 1462) seg(0.39240928933346469) sebeta(0.1386990393085569) corrgb(-0.262526314
+> 33686757) rhobench(0.99401272104479366) sebench(0.059540106003278991) corrbrh
+> o(-0.063495248108467406) corrbb(0.20213015099453396)
+
+. assert reldif(r(bound_ratio), 2.7025749035756554) < 1e-9
+
+. assert reldif(r(anchor_ratio), 2.7025749035756554) < 1e-9
+
+. assert reldif(r(g), -1.928435043035172) < 1e-9
+
+. assert reldif(r(gb_ratio), -2.0789037719812731) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -3.1444818355242763) < 1e-9
+
+. assert reldif(r(gb_hi), -1.2643918794904812) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 1.6437094433376256) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 4.0878263861815594) < 1e-9
+
+. assert reldif(r(tau_bench), 1.2597699747305207) < 1e-9
+
+. assert "`r(tau_shape)'" == "two_rays"
+
+. assert reldif(r(tau_lo), -0.35205809335642746) < 1e-9
+
+. assert reldif(r(tau_hi), 0.32636368440801133) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(-0.06165481688254857) rho(1.0138979689698189) b(-0
+> .96556082126387277) r2(0.4185579115680495) rholo(0) rhohi(1) serho(0.04450768
+> 2988005434) seb(0.32586546197799193) corr(-0.24205774147341225) seg(0.5738178
+> 3854538249) sebeta(0.70568035146302777) corrgb(-0.28369603674141453) rhobench
+> (0.7799040708533348) sebench(0.051557475436270046) corrbrho(-0.25624787382756
+> 858) corrbb(0.24812506654746763)
+
+. assert reldif(r(bound_ratio), 7.0308674055342593) < 1e-9
+
+. assert reldif(r(anchor_ratio), 7.0308674055342593) < 1e-9
+
+. assert reldif(r(g), 0.43348684241369412) < 1e-9
+
+. assert reldif(r(gb_ratio), -7.0308674055342593) < 1e-9
+
+. assert "`r(gb_shape)'" == "whole_line"
+
+. assert missing(r(gb_lo))
+
+. assert missing(r(gb_hi))
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), 0.24233988472129317) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), 0.094402020241462728) < 1e-9
+
+. assert reldif(r(tau_hi), 0.65479377455019638) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.20344344565443834) rho(0.36074351182095976) b(0.
+> 068684953353326) r2(0.30042206710184916) rholo(0) rhohi(1.2) serho(0.03922812
+> 2413849743) seb(0.4729573428779289) corr(-0.40419841952522517) seg(0.78618610
+> 521376897) sebeta(0.44316758740332085) corrgb(0.093272878980334206) rhobench(
+> 0.61153123632644857) sebench(0.075595821050503914) corrbrho(0.145601395815612
+> 04) corrbb(0.0001547719364957123)
+
+. assert reldif(r(bound_ratio), 21.499408898661002) < 1e-9
+
+. assert reldif(r(anchor_ratio), 21.499408898661002) < 1e-9
+
+. assert reldif(r(g), -4.3739138258772874) < 1e-9
+
+. assert reldif(r(gb_ratio), -21.499408898661002) < 1e-9
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -3.629195479956155) < 1e-9
+
+. assert reldif(r(gb_hi), 6.4751727426818828) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 3.629195479956155) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), 3.6512760402616573) < 1e-9
+
+. assert "`r(tau_shape)'" == "two_rays"
+
+. assert reldif(r(tau_lo), -0.19868948103257023) < 1e-9
+
+. assert reldif(r(tau_hi), 0.2258462612223236) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(-0.82421652998812234) rho(1.0854348659143436) b(-1
+> .1053443523105893) r2(0.063373622054086073) rholo(0) rhohi(1.2) serho(0.01693
+> 6340733446114) seb(0.33803679269641518) corr(0.39099163713285034) seg(0.81611
+> 030286921504) sebeta(0.22532070200836643) corrgb(0.14928638556547258) rhobenc
+> h(0.96021666084640356) sebench(0.059686994868385509) corrbrho(0.0670533453505
+> 2565) corrbb(0.12841484474228421)
+
+. assert reldif(r(bound_ratio), 0.069561607999589811) < 1e-9
+
+. assert reldif(r(anchor_ratio), 0.069561607999589811) < 1e-9
+
+. assert reldif(r(g), 0.057333827165815927) < 1e-9
+
+. assert reldif(r(gb_ratio), -0.069561607999589811) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -2.6338481447550723) < 1e-9
+
+. assert reldif(r(gb_hi), 2.0032103450492609) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 2.6338481447550723) < 1e-9
+
+. assert reldif(r(tau_bench), 0.11328433967766374) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), 0.0052336133917121235) < 1e-9
+
+. assert reldif(r(tau_hi), 0.34492089551701077) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(1.316641076970527) rho(1.0251194352688269) b(0.224
+> 55950445065115) r2(0.80164921559912894) rholo(-0.29999999999999999) rhohi(1.2
+> ) serho(0.040695189296878313) seb(0.36689341467203834) corr(-0.47530800892317
+> 41) seg(0.4293925587500968) sebeta(0.50970394860734702) corrgb(-0.12194515725
+> 096333) rhobench(0.8802985452545411) sebench(0.060011875485546214) corrbrho(-
+> 0.15409726591904443) corrbb(0.0026403114620179302)
+
+. assert reldif(r(bound_ratio), 3.5247545741329205) < 1e-9
+
+. assert reldif(r(anchor_ratio), 3.5247545741329205) < 1e-9
+
+. assert reldif(r(g), -3.5698743527255075) < 1e-9
+
+. assert reldif(r(gb_ratio), -2.7113496724099386) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -11.01625006996716) < 1e-9
+
+. assert reldif(r(gb_hi), -1.48536130630325) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 1.930969698194225) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 14.32112509095731) < 1e-9
+
+. assert reldif(r(tau_bench), -0.64491097969140465) < 1e-9
+
+. assert "`r(tau_shape)'" == "two_rays"
+
+. assert reldif(r(tau_lo), 0.019029983014062796) < 1e-9
+
+. assert reldif(r(tau_hi), 0.23813417151171218) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.45082097985235325) rho(0.99215464967374367) b(-1
+> .1500726843612723) r2(0.01827064888855337) rholo(0) rhohi(1) serho(0.07157719
+> 6412551988) seb(0.01452796409675023) corr(-0.50748451902766412) seg(0.0482537
+> 26101049964) sebeta(0.24176136261826334) corrgb(0.38175401789889585) rhobench
+> (0.53409534526040736) sebench(0.072791827369856663) corrbrho(0.28300887360570
+> 764) corrbb(0.085301616764638877)
+
+. assert reldif(r(bound_ratio), 0.035239080243682053) < 1e-9
+
+. assert reldif(r(anchor_ratio), 0.035239080243682053) < 1e-9
+
+. assert reldif(r(g), 0.015886516684552446) < 1e-9
+
+. assert reldif(r(gb_ratio), 0.035239080243682053) < 1e-9
+
+. assert "`r(gb_shape)'" == "whole_line"
+
+. assert missing(r(gb_lo))
+
+. assert missing(r(gb_hi))
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), 0.39828726535465314) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), 0.25395556787112822) < 1e-9
+
+. assert reldif(r(tau_hi), 0.53951603398840831) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(-1.2636562782922001) rho(0.37438302263558854) b(1.
+> 4494563433130137) r2(0.36130467303641367) rholo(-0.29999999999999999) rhohi(1
+> .2) serho(0.081138496588184894) seb(0.55393709600650975) corr(0.3458133337739
+> 4818) seg(0.58539220843460138) sebeta(0.23388956933382538) corrgb(0.597236748
+> 73631927) rhobench(0.85726876266893681) sebench(0.014762878698991972) corrbrh
+> o(0.27778203783395833) corrbb(-0.065222046910753784)
+
+. assert reldif(r(bound_ratio), 0.25643826643944079) < 1e-9
+
+. assert reldif(r(anchor_ratio), 0.25643826643944079) < 1e-9
+
+. assert reldif(r(g), -0.24926909644659029) < 1e-9
+
+. assert reldif(r(gb_ratio), 0.19726020495341601) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -0.95043352611060361) < 1e-9
+
+. assert reldif(r(gb_hi), 0.95168386111780312) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 1.2371890194531441) < 1e-9
+
+. assert reldif(r(tau_bench), 0.33314955794364887) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), 0.15148846044171244) < 1e-9
+
+. assert reldif(r(tau_hi), 1.5004071791937024) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(-1.194685682110648) rho(0.53936805505603613) b(-0.
+> 90320549660757832) r2(0.088833767536662431) rholo(-0.29999999999999999) rhohi
+> (1.2) serho(0.091068321288322263) seb(0.59873993823146354) corr(-0.1175225864
+> 6181046) seg(0.31923886052664407) sebeta(0.40142834535146832) corrgb(0.742568
+> 17820250509) rhobench(0.73035761816675127) sebench(0.0068973755567013307) cor
+> rbrho(0.13612133367881074) corrbb(-0.18756579576284976)
+
+. assert reldif(r(bound_ratio), 0.1070240059995457) < 1e-9
+
+. assert reldif(r(anchor_ratio), 0.1070240059995457) < 1e-9
+
+. assert reldif(r(g), 0.098353882776754872) < 1e-9
+
+. assert reldif(r(gb_ratio), -0.082326158461189) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -1.5084995043059366) < 1e-9
+
+. assert reldif(r(gb_hi), 0.3131660886384327) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 1.9610493555977178) < 1e-9
+
+. assert reldif(r(tau_bench), -0.21145748539847034) < 1e-9
+
+. assert "`r(tau_shape)'" == "two_rays"
+
+. assert reldif(r(tau_lo), -0.012875035052275477) < 1e-9
+
+. assert reldif(r(tau_hi), 0.70458658853138345) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.12822197416958142) rho(0.68429944492918637) b(0.
+> 73226252188181418) r2(0.20343466562683504) rholo(-0.29999999999999999) rhohi(
+> 1.2) serho(0.014287677349066354) seb(0.31294387080222102) corr(0.367617231961
+> 74556) seg(0.55207802053364829) sebeta(0.21748768093901247) corrgb(0.58195919
+> 306259047) rhobench(0.532621971420981) sebench(0.0047497940936792474) corrbrh
+> o(0.029782870115064919) corrbb(0.28282584406934269)
+
+. assert reldif(r(bound_ratio), 2.8166899587861436) < 1e-9
+
+. assert reldif(r(anchor_ratio), 2.8166899587861436) < 1e-9
+
+. assert reldif(r(g), -0.27781657472245863) < 1e-9
+
+. assert reldif(r(gb_ratio), -2.1666845836816488) < 1e-9
+
+. assert "`r(gb_shape)'" == "whole_line"
+
+. assert missing(r(gb_lo))
+
+. assert missing(r(gb_hi))
+
+. assert reldif(r(bound_ratio_lo), 0) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), -0.20713537696619388) < 1e-9
+
+. assert "`r(tau_shape)'" == "bounded"
+
+. assert reldif(r(tau_lo), -1.2157341589444735) < 1e-9
+
+. assert reldif(r(tau_hi), -0.11387565345252232) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.94698637450817069) rho(0.79555178437164153) b(-0
+> .48934919832522622) r2(0.46837463691537784) rholo(0) rhohi(1) serho(0.0833333
+> 45078921151) seb(0.46070299415847094) corr(-0.10051378166977376) seg(0.454415
+> 00362381315) sebeta(0.25477251765604209) corrgb(0.2146196080573386) rhobench(
+> 0.90588889783864068) sebench(0.049086017946846805) corrbrho(-0.06247742516353
+> 2663) corrbb(-0.17593920218781922)
+
+. assert reldif(r(bound_ratio), 1.0107197635691638) < 1e-9
+
+. assert reldif(r(anchor_ratio), 1.0107197635691638) < 1e-9
+
+. assert reldif(r(g), 0.95713784454611794) < 1e-9
+
+. assert reldif(r(gb_ratio), 1.0107197635691638) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), 0.078203645898940688) < 1e-9
+
+. assert reldif(r(gb_hi), 2.4268944929759235) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 0.078203645898940688) < 1e-9
+
+. assert reldif(r(bound_ratio_hi), 2.4268944929759235) < 1e-9
+
+. assert reldif(r(tau_bench), -0.2254772539622473) < 1e-9
+
+. assert "`r(tau_shape)'" == "whole_line"
+
+. assert missing(r(tau_lo))
+
+. assert missing(r(tau_hi))
+
+. assert "`r(control_type)'" == "none"
+
+. quietly preleveldose, beta(0.4212174491423169) rho(0.36590202999642452) b(0.2
+> 4170677944681718) r2(0.61115041337250686) rholo(0) rhohi(1.2) serho(0.0808089
+> 42785648277) seb(0.17619250620685739) corr(-0.027901820942400679) seg(0.39858
+> 896178740538) sebeta(0.59358811783447785) corrgb(0.20197852140627037) rhobenc
+> h(0.89274657766601362) sebench(0.066685247797646993) corrbrho(-0.058262304268
+> 33312) corrbb(0.050517282939243069)
+
+. assert reldif(r(bound_ratio), 6.002786875518483) < 1e-9
+
+. assert reldif(r(anchor_ratio), 6.002786875518483) < 1e-9
+
+. assert reldif(r(g), -2.5284785754508738) < 1e-9
+
+. assert reldif(r(gb_ratio), -6.002786875518483) < 1e-9
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -1.3968239736436008) < 1e-9
+
+. assert reldif(r(gb_hi), 3.5201326676976588) < 1e-9
+
+. assert reldif(r(bound_ratio_lo), 1.3968239736436008) < 1e-9
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(tau_bench), 2.1796846115584891) < 1e-9
+
+. assert "`r(tau_shape)'" == "two_rays"
+
+. assert reldif(r(tau_lo), -4.8511001015378756) < 1e-9
+
+. assert reldif(r(tau_hi), 0.78951637793195739) < 1e-9
+
+. assert "`r(control_type)'" == "none"
+
+. // Synthetic clustered designs (tests/synthetic_iv.csv); expected values from
+>  an
+. // independent NumPy implementation in make_reference.py, section 3.
+. preserve
+
+. import delimited using "tests/synthetic_iv.csv", clear asdouble varnames(1)
+(8 vars, 600 obs)
+
+. quietly preleveldose_ols change dose baseline c1 c2 if design==1, cluster(clu
+> ster) iv(z)
+
+. assert reldif(r(beta), 0.85892085760546555) < 1e-8
+
+. assert reldif(r(rho_obs), 0.38819922045076916) < 1e-8
+
+. assert reldif(r(b), 0.47746862115941591) < 1e-8
+
+. assert reldif(r(R2), 0.21885802495146825) < 1e-8
+
+. assert reldif(r(g), -0.45837153532733743) < 1e-8
+
+. assert reldif(r(bound_ratio), 0.53365980260999157) < 1e-8
+
+. assert reldif(r(gb_ratio), -0.53365980260999157) < 1e-8
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -0.66550254344416515) < 1e-8
+
+. assert reldif(r(gb_hi), -0.39693316337528689) < 1e-8
+
+. assert reldif(r(bound_ratio_lo), 0.39693316337528689) < 1e-8
+
+. assert reldif(r(bound_ratio_hi), 0.66550254344416515) < 1e-8
+
+. assert reldif(r(rho_imp), 0.74179722966397343) < 1e-8
+
+. assert reldif(r(one_plus_gamma), 0.74179722966397343) < 1e-8
+
+. assert reldif(r(g_iv), 0.80150929250854575) < 1e-8
+
+. assert reldif(r(beta_iv), 0.51311052154492576) < 1e-8
+
+. assert reldif(r(giv_ratio), 1.5620597490288823) < 1e-8
+
+. assert reldif(r(Q), -0.95566937215834613) < 1e-8
+
+. assert reldif(r(channel_iv), -0.49036400997268076) < 1e-8
+
+. assert reldif(r(bound_iv), 0.80150929250854575) < 1e-8
+
+. assert reldif(r(bound_ratio_iv), 1.5620597490288826) < 1e-8
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), 0.33697310307668144) < 1e-8
+
+. assert reldif(r(giv_hi), 1.7687421370768435) < 1e-8
+
+. assert "`r(givb_shape)'" == "bounded"
+
+. assert reldif(r(givb_lo), 0.55144210328888843) < 1e-8
+
+. assert reldif(r(givb_hi), 6.5187992129860701) < 1e-8
+
+. assert "`r(Q_shape)'" == "bounded"
+
+. assert reldif(r(Q_lo), -3.8923796556725092) < 1e-8
+
+. assert reldif(r(Q_hi), -0.35645178223782498) < 1e-8
+
+. assert "`r(control_type)'" == "own_baseline"
+
+. assert "`r(iv_instrument)'" == "z"
+
+. matrix pld_ivv = (0.0018172091432800514,0.00080836228347642796,-0.00075858058
+> 338199984,-0.00051815360668737182 \ 0.00080836228347642796,0.0028021209369618
+> 254,-0.0023646240978119205,-0.0020832327121647638 \ -0.00075858058338199984,-
+> 0.0023646240978119205,0.0029930278534978901,0.0026104492732394046 \ -0.000518
+> 15360668737182,-0.0020832327121647638,0.0026104492732394046,0.002635446368343
+> 7275)
+
+. quietly preleveldose_iv, rho(0.38819922045076916) czs(0.23271540002136062) cz
+> h(0.29034647782187678) czy(0.14897983266391543) v(pld_ivv)
+
+. assert reldif(r(g_iv), 0.80150929250854575) < 1e-9
+
+. assert reldif(r(beta_iv), 0.51311052154492576) < 1e-9
+
+. assert reldif(r(giv_ratio), 1.5620597490288823) < 1e-9
+
+. assert reldif(r(Q), -0.95566937215834613) < 1e-9
+
+. assert reldif(r(channel_iv), -0.49036400997268076) < 1e-9
+
+. assert reldif(r(bound_iv), 0.80150929250854575) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 1.5620597490288826) < 1e-9
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), 0.33697310307668144) < 1e-9
+
+. assert reldif(r(giv_hi), 1.7687421370768435) < 1e-9
+
+. assert "`r(givb_shape)'" == "bounded"
+
+. assert reldif(r(givb_lo), 0.55144210328888843) < 1e-9
+
+. assert reldif(r(givb_hi), 6.5187992129860701) < 1e-9
+
+. assert "`r(Q_shape)'" == "bounded"
+
+. assert reldif(r(Q_lo), -3.8923796556725092) < 1e-9
+
+. assert reldif(r(Q_hi), -0.35645178223782498) < 1e-9
+
+. quietly preleveldose, beta(0.85892085760546555) rho(0.38819922045076916) b(0.
+> 47746862115941591) r2(0.21885802495146825) seg(0.0654697463253337) sebeta(0.0
+> 3501131738950751) corrgb(-0.48867609930721562) czs(0.23271540002136062) czh(0
+> .29034647782187678) czy(0.14897983266391543) ivv(pld_ivv)
+
+. assert reldif(r(g_iv), 0.80150929250854575) < 1e-9
+
+. assert reldif(r(beta_iv), 0.51311052154492576) < 1e-9
+
+. assert reldif(r(giv_ratio), 1.5620597490288823) < 1e-9
+
+. assert reldif(r(Q), -0.95566937215834613) < 1e-9
+
+. assert reldif(r(channel_iv), -0.49036400997268076) < 1e-9
+
+. assert reldif(r(bound_iv), 0.80150929250854575) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 1.5620597490288826) < 1e-9
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), 0.33697310307668144) < 1e-9
+
+. assert reldif(r(giv_hi), 1.7687421370768435) < 1e-9
+
+. assert "`r(givb_shape)'" == "bounded"
+
+. assert reldif(r(givb_lo), 0.55144210328888843) < 1e-9
+
+. assert reldif(r(givb_hi), 6.5187992129860701) < 1e-9
+
+. assert "`r(Q_shape)'" == "bounded"
+
+. assert reldif(r(Q_lo), -3.8923796556725092) < 1e-9
+
+. assert reldif(r(Q_hi), -0.35645178223782498) < 1e-9
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -0.66550254344416515) < 1e-9
+
+. assert reldif(r(gb_hi), -0.39693316337528689) < 1e-9
+
+. assert reldif(r(bound_ratio), 0.53365980260999157) < 1e-9
+
+. quietly preleveldose_ols change dose baseline c1 c2 if design==2, cluster(clu
+> ster) iv(z)
+
+. assert reldif(r(beta), -0.12179693479741892) < 1e-8
+
+. assert reldif(r(rho_obs), 1.1732690752596691) < 1e-8
+
+. assert reldif(r(b), 0.41217997549652796) < 1e-8
+
+. assert reldif(r(R2), 0.16562242399810784) < 1e-8
+
+. assert reldif(r(g), -0.40182064594135786) < 1e-8
+
+. assert reldif(r(bound_ratio), 3.29910310640981) < 1e-8
+
+. assert reldif(r(gb_ratio), 3.29910310640981) < 1e-8
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -3.7397181079767834) < 1e-8
+
+. assert reldif(r(gb_hi), 1.1722639187418411) < 1e-8
+
+. assert reldif(r(bound_ratio_lo), 1.1722639187418411) < 1e-8
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(rho_imp), 1.1474953560581278) < 1e-8
+
+. assert reldif(r(one_plus_gamma), 1.1474953560581278) < 1e-8
+
+. assert reldif(r(g_iv), -8.0815794374240024) < 1e-8
+
+. assert reldif(r(beta_iv), 0.9583498501920964) < 1e-8
+
+. assert reldif(r(giv_ratio), -8.432807117154649) < 1e-8
+
+. assert reldif(r(Q), -1.4611446910325419) < 1e-8
+
+. assert reldif(r(channel_iv), -1.4002877957600135) < 1e-8
+
+. assert reldif(r(bound_iv), 8.0815794374240024) < 1e-8
+
+. assert reldif(r(bound_ratio_iv), 8.432807117154649) < 1e-8
+
+. assert "`r(giv_shape)'" == "two_rays"
+
+. assert reldif(r(giv_lo), -3.4826724171182986) < 1e-8
+
+. assert reldif(r(giv_hi), 16.752490829801786) < 1e-8
+
+. assert "`r(givb_shape)'" == "two_rays"
+
+. assert reldif(r(givb_lo), -1.5544778495610179) < 1e-8
+
+. assert reldif(r(givb_hi), 2.7547409273586312) < 1e-8
+
+. assert "`r(Q_shape)'" == "two_rays"
+
+. assert reldif(r(Q_lo), 0.35323862905116571) < 1e-8
+
+. assert reldif(r(Q_hi), 0.92317264740389715) < 1e-8
+
+. assert "`r(control_type)'" == "own_baseline"
+
+. assert "`r(iv_instrument)'" == "z"
+
+. matrix pld_ivv = (0.026225708307415524,0.001162958565896542,-0.00072772848578
+> 647243,0.017024510701797189 \ 0.001162958565896542,0.0018019447283726881,-0.0
+> 0095714674547577321,0.001366704970929502 \ -0.00072772848578647243,-0.0009571
+> 4674547577321,0.0024061256672852842,-0.00045811844054220464 \ 0.0170245107017
+> 97189,0.001366704970929502,-0.00045811844054220464,0.018172589220143424)
+
+. quietly preleveldose_iv, rho(1.1732690752596691) czs(0.53710920026228659) czh
+> (-0.066460919480052741) czy(-0.063692812227337525) v(pld_ivv)
+
+. assert reldif(r(g_iv), -8.0815794374240024) < 1e-9
+
+. assert reldif(r(beta_iv), 0.9583498501920964) < 1e-9
+
+. assert reldif(r(giv_ratio), -8.432807117154649) < 1e-9
+
+. assert reldif(r(Q), -1.4611446910325419) < 1e-9
+
+. assert reldif(r(channel_iv), -1.4002877957600135) < 1e-9
+
+. assert reldif(r(bound_iv), 8.0815794374240024) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 8.432807117154649) < 1e-9
+
+. assert "`r(giv_shape)'" == "two_rays"
+
+. assert reldif(r(giv_lo), -3.4826724171182986) < 1e-9
+
+. assert reldif(r(giv_hi), 16.752490829801786) < 1e-9
+
+. assert "`r(givb_shape)'" == "two_rays"
+
+. assert reldif(r(givb_lo), -1.5544778495610179) < 1e-9
+
+. assert reldif(r(givb_hi), 2.7547409273586312) < 1e-9
+
+. assert "`r(Q_shape)'" == "two_rays"
+
+. assert reldif(r(Q_lo), 0.35323862905116571) < 1e-9
+
+. assert reldif(r(Q_hi), 0.92317264740389715) < 1e-9
+
+. quietly preleveldose, beta(-0.12179693479741892) rho(1.1732690752596691) b(0.
+> 41217997549652796) r2(0.16562242399810784) seg(0.058424334002815222) sebeta(0
+> .11256347980997979) corrgb(0.2177349765133198) czs(0.53710920026228659) czh(-
+> 0.066460919480052741) czy(-0.063692812227337525) ivv(pld_ivv)
+
+. assert reldif(r(g_iv), -8.0815794374240024) < 1e-9
+
+. assert reldif(r(beta_iv), 0.9583498501920964) < 1e-9
+
+. assert reldif(r(giv_ratio), -8.432807117154649) < 1e-9
+
+. assert reldif(r(Q), -1.4611446910325419) < 1e-9
+
+. assert reldif(r(channel_iv), -1.4002877957600135) < 1e-9
+
+. assert reldif(r(bound_iv), 8.0815794374240024) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 8.432807117154649) < 1e-9
+
+. assert "`r(giv_shape)'" == "two_rays"
+
+. assert reldif(r(giv_lo), -3.4826724171182986) < 1e-9
+
+. assert reldif(r(giv_hi), 16.752490829801786) < 1e-9
+
+. assert "`r(givb_shape)'" == "two_rays"
+
+. assert reldif(r(givb_lo), -1.5544778495610179) < 1e-9
+
+. assert reldif(r(givb_hi), 2.7547409273586312) < 1e-9
+
+. assert "`r(Q_shape)'" == "two_rays"
+
+. assert reldif(r(Q_lo), 0.35323862905116571) < 1e-9
+
+. assert reldif(r(Q_hi), 0.92317264740389715) < 1e-9
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -3.7397181079767834) < 1e-9
+
+. assert reldif(r(gb_hi), 1.1722639187418411) < 1e-9
+
+. assert reldif(r(bound_ratio), 3.29910310640981) < 1e-9
+
+. quietly preleveldose_ols change dose baseline c1 c2 if design==3, cluster(clu
+> ster) iv(z)
+
+. assert reldif(r(beta), 0.11092777733186769) < 1e-8
+
+. assert reldif(r(rho_obs), 1.1212844909291966) < 1e-8
+
+. assert reldif(r(b), 0.44291032956288795) < 1e-8
+
+. assert reldif(r(R2), 0.13990384811214937) < 1e-8
+
+. assert reldif(r(g), -0.31587397893885588) < 1e-8
+
+. assert reldif(r(bound_ratio), 2.8475643029774345) < 1e-8
+
+. assert reldif(r(gb_ratio), -2.8475643029774345) < 1e-8
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -0.74071918874630127) < 1e-8
+
+. assert reldif(r(gb_hi), 1.4579917069493751) < 1e-8
+
+. assert reldif(r(bound_ratio_lo), 0.74071918874630127) < 1e-8
+
+. assert missing(r(bound_ratio_hi))
+
+. assert reldif(r(rho_imp), 1.1981354630768695) < 1e-8
+
+. assert reldif(r(one_plus_gamma), 1.1981354630768695) < 1e-8
+
+. assert reldif(r(g_iv), 0.16414633794247901) < 1e-8
+
+. assert reldif(r(beta_iv), 0.16364895610491637) < 1e-8
+
+. assert reldif(r(giv_ratio), 1.0030393217861029) < 1e-8
+
+. assert reldif(r(Q), 0.12165311352479408) < 1e-8
+
+. assert reldif(r(channel_iv), 0.019908405035245432) < 1e-8
+
+. assert reldif(r(bound_iv), 0.16414633794247901) < 1e-8
+
+. assert reldif(r(bound_ratio_iv), 1.0030393217861027) < 1e-8
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), -0.0053977673233933619) < 1e-8
+
+. assert reldif(r(giv_hi), 0.37947062869104986) < 1e-8
+
+. assert "`r(givb_shape)'" == "whole_line"
+
+. assert missing(r(givb_lo))
+
+. assert missing(r(givb_hi))
+
+. assert "`r(Q_shape)'" == "whole_line"
+
+. assert missing(r(Q_lo))
+
+. assert missing(r(Q_hi))
+
+. assert "`r(control_type)'" == "own_baseline"
+
+. assert "`r(iv_instrument)'" == "z"
+
+. matrix pld_ivv = (0.034265971580126967,0.0036523718281039632,-0.0036998180775
+> 841198,0.0082976996208393005 \ 0.0036523718281039632,0.0023121390117832106,-0
+> .0014920609590668404,0.0012875952959492259 \ -0.0036998180775841198,-0.001492
+> 0609590668404,0.0017982245954578163,-0.0007095340353311802 \ 0.00829769962083
+> 93005,0.0012875952959492259,-0.0007095340353311802,0.026250546582738888)
+
+. quietly preleveldose_iv, rho(1.1212844909291966) czs(0.090926497535234643) cz
+> h(0.55393558379046848) czy(0.090650980036677598) v(pld_ivv)
+
+. assert reldif(r(g_iv), 0.16414633794247901) < 1e-9
+
+. assert reldif(r(beta_iv), 0.16364895610491637) < 1e-9
+
+. assert reldif(r(giv_ratio), 1.0030393217861029) < 1e-9
+
+. assert reldif(r(Q), 0.12165311352479408) < 1e-9
+
+. assert reldif(r(channel_iv), 0.019908405035245432) < 1e-9
+
+. assert reldif(r(bound_iv), 0.16414633794247901) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 1.0030393217861027) < 1e-9
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), -0.0053977673233933619) < 1e-9
+
+. assert reldif(r(giv_hi), 0.37947062869104986) < 1e-9
+
+. assert "`r(givb_shape)'" == "whole_line"
+
+. assert missing(r(givb_lo))
+
+. assert missing(r(givb_hi))
+
+. assert "`r(Q_shape)'" == "whole_line"
+
+. assert missing(r(Q_lo))
+
+. assert missing(r(Q_hi))
+
+. quietly preleveldose, beta(0.11092777733186769) rho(1.1212844909291966) b(0.4
+> 4291032956288795) r2(0.13990384811214937) seg(0.045936915740290019) sebeta(0.
+> 15905872241294833) corrgb(-0.16378591348380298) czs(0.090926497535234643) czh
+> (0.55393558379046848) czy(0.090650980036677598) ivv(pld_ivv)
+
+. assert reldif(r(g_iv), 0.16414633794247901) < 1e-9
+
+. assert reldif(r(beta_iv), 0.16364895610491637) < 1e-9
+
+. assert reldif(r(giv_ratio), 1.0030393217861029) < 1e-9
+
+. assert reldif(r(Q), 0.12165311352479408) < 1e-9
+
+. assert reldif(r(channel_iv), 0.019908405035245432) < 1e-9
+
+. assert reldif(r(bound_iv), 0.16414633794247901) < 1e-9
+
+. assert reldif(r(bound_ratio_iv), 1.0030393217861027) < 1e-9
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), -0.0053977673233933619) < 1e-9
+
+. assert reldif(r(giv_hi), 0.37947062869104986) < 1e-9
+
+. assert "`r(givb_shape)'" == "whole_line"
+
+. assert missing(r(givb_lo))
+
+. assert missing(r(givb_hi))
+
+. assert "`r(Q_shape)'" == "whole_line"
+
+. assert missing(r(Q_lo))
+
+. assert missing(r(Q_hi))
+
+. assert "`r(gb_shape)'" == "two_rays"
+
+. assert reldif(r(gb_lo), -0.74071918874630127) < 1e-9
+
+. assert reldif(r(gb_hi), 1.4579917069493751) < 1e-9
+
+. assert reldif(r(bound_ratio), 2.8475643029774345) < 1e-9
+
+. restore
+
+. preserve
+
+. clear
+
+. set obs 120
+Number of observations (_N) was 0, now 120.
+
+. generate long group = ceil(_n/10)
+
+. generate double baseline = sin(_n*.37)+group*.02
+
+. generate double dose = cos(_n*.71)-.4*baseline
+
+. generate double control = sin(_n*.13)
+
+. generate double change = .3+.25*dose+.12*baseline-.1*control+sin(group*.7)*.2
+> 5+cos(_n*.43)*.2
+
+. generate double z = cos(_n*.29)+.5*dose+.3*sin(_n*.11)
+
+. quietly preleveldose_ols change dose baseline control, cluster(group) iv(z)
+
+. assert reldif(r(beta), 0.19711301957673297) < 1e-8
+
+. assert reldif(r(rho_obs), 0.99991150675828722) < 1e-8
+
+. assert reldif(r(b), 0.44232202831673056) < 1e-8
+
+. assert reldif(r(R2), 0.16128276105749526) < 1e-8
+
+. assert reldif(r(bound_ratio), 1.8498395915327051) < 1e-8
+
+. assert reldif(r(g), -0.3646274676196018) < 1e-8
+
+. assert reldif(r(gb_ratio), -1.8498395915327051) < 1e-8
+
+. assert reldif(r(se_L), 0.73835645853107568) < 1e-8
+
+. assert reldif(r(se_U), 0.16264704531901053) < 1e-8
+
+. assert reldif(r(g_iv), -0.015382109421918345) < 1e-8
+
+. assert reldif(r(beta_iv), 0.1825395192315753) < 1e-8
+
+. assert reldif(r(giv_ratio), -0.084267283526720166) < 1e-8
+
+. assert reldif(r(Q), 7.4570850896097254e-06) < 1e-8
+
+. assert reldif(r(rho_imp), 1.1038477967794267) < 1e-8
+
+. assert reldif(r(one_plus_gamma), 1.1038477967794267) < 1e-8
+
+. assert "`r(control_type)'" == "own_baseline"
+
+. assert "`r(gb_shape)'" == "bounded"
+
+. assert reldif(r(gb_lo), -2.7837210407746626) < 1e-8
+
+. assert reldif(r(gb_hi), -1.1551333112559747) < 1e-8
+
+. assert "`r(giv_shape)'" == "bounded"
+
+. assert reldif(r(giv_lo), -0.66003162252613845) < 1e-8
+
+. assert reldif(r(giv_hi), 0.8661537397384107) < 1e-8
+
+. assert "`r(givb_shape)'" == "whole_line"
+
+. assert missing(r(givb_lo))
+
+. assert missing(r(givb_hi))
+
+. assert "`r(Q_shape)'" == "whole_line"
+
+. assert missing(r(Q_lo))
+
+. assert missing(r(Q_hi))
+
+. assert "`r(iv_instrument)'" == "z"
+
+. restore
+
+. 
+end of do-file
+
+. do tests/export.do
+
+. // Test the actual file writer, missing-statistic display, and overwrite guar
+> d.
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5) saving("tests/table_chec
+> k.tex") replace
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+(file tests/table_check.tex not found)
+LaTeX fragment saved to tests/table_check.tex
+
+. assert r(rho_imp)==0
+
+. assert "`r(latex_file)'" == "tests/table_check.tex"
+
+. assert _N == 1
+
+. local found = 0
+
+. local header = 0
+
+. tempname fh
+
+. file open `fh' using "tests/table_check.tex", read text
+
+. file read `fh' line
+
+. while r(eof) == 0 {
+  2.     if strpos(`"`line'"', "0.5000 & 1.0000 & 0.5000 & 0.0000") local found
+>  = 1
+  3.     if strpos(`"`line'"', "widehat") local header = 1
+  4.     file read `fh' line
+  5. }
+
+. file close `fh'
+
+. assert `found' == 1
+
+. assert `header' == 1
+
+. capture preleveldose, beta(1) rho(-.5) b(1) r2(.5) saving("tests/table_check.
+> tex")
+
+. assert _rc == 602
+
+. preleveldose, beta(0) rho(.5) b(0) r2(0) saving("tests/table_missing.tex") re
+> place
+Diagnostic moments: beta=           0 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            . (           . percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            . (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =            0
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+(file tests/table_missing.tex not found)
+LaTeX fragment saved to tests/table_missing.tex
+
+. assert missing(r(rho_imp))
+
+. assert missing(r(anchor_share))
+
+. local found = 0
+
+. file open `fh' using "tests/table_missing.tex", read text
+
+. file read `fh' line
+
+. while r(eof) == 0 {
+  2.     if strpos(`"`line'"', "0.0000 & 0.0000 & --- & ---") local found = 1
+  3.     file read `fh' line
+  4. }
+
+. file close `fh'
+
+. assert `found' == 1
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) beta1(.)
+
+. assert _rc == 198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) replace
+
+. assert _rc == 198
+
+. 
+. preleveldose, beta(1) rho(.5) b(.000001) r2(.000001) saving("tests/table_smal
+> l.tex") replace
+Diagnostic moments: beta=           1 R2= 1.00000e-06 b= 1.00000e-06 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            1 (         100 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =           .5 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =           .5   c_obs =           .5
+Conditional channel bound =            1
+Effect set status: bounded
+Ordered set: [     -500000,       500000]   width =      1000000
+(file tests/table_small.tex not found)
+LaTeX fragment saved to tests/table_small.tex
+
+. assert r(b) != 0
+
+. assert "`r(set_status)'" == "bounded"
+
+. local found = 0
+
+. file open `fh' using "tests/table_small.tex", read text
+
+. file read `fh' line
+
+. while r(eof) == 0 {
+  2.     if strpos(`"`line'"', "0.0000 & 0.0000") local found = 1
+  3.     file read `fh' line
+  4. }
+
+. file close `fh'
+
+. assert `found' == 0
+
+. 
+end of do-file
+
+. do tests/boundaries.do
+
+. // Degenerate but valid covariance inputs, without invented significance test
+> s.
+. foreach direction in -1 1 {
+  2.     preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) serho(.04) seb(.02) corr(
+> `direction')
+  3.     assert r(se_L)>=0 & r(se_U)>=0
+  4.     assert !missing(r(se_width))
+  5. }
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:         .096          .016
+Delta SEs do not provide weak-denominator-robust coverage.
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:         .064          .144
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) serho(0) seb(0) corr(0)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:            0             0
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. assert r(se_L)==0 & r(se_U)==0 & r(se_width)==0
+
+. assert missing(r(corr_LU))
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) rholo(.6) rhohi(.6) serho(.04) s
+> eb(.02) corr(.4)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =           .6 (          60 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =          .24
+Effect set status: bounded
+Ordered set: [          .4,           .4]   width =            0
+Endpoint delta SEs:     .0876356      .0876356
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. assert r(L)==r(U) & r(width)==0 & r(se_width)==0
+
+. // Near-zero is not silently set to zero.
+. preleveldose, beta(.4) rho(.8) b(-1e-12) r2(1e-12)
+Diagnostic moments: beta=          .4 R2= 1.00000e-12 b=-1.00000e-12 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          2.5 (         250 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.5 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          -.2   c_obs =           .6
+Conditional channel bound =            1
+Effect set status: bounded
+Ordered set: [-2.00000e+11,  8.00000e+11]   width =  1.00000e+12
+
+. assert "`r(set_status)'"=="bounded"
+
+. assert r(width)>1e11 & !missing(r(width))
+
+. // Complete uncertainty inputs, finite values, and overflow checks.
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) serho(.1) seb(.1) corr(1.1)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) serho(-.1) seb(.1) corr(0)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) serho(.a) seb(.1) corr(0)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(0)
+
+. assert _rc==198
+
+. capture preleveldose, beta(5e199) rho(.5) b(1e200) r2(.5) beta1(1e200)
+
+. assert _rc==498
+
+. capture preleveldose, beta(1e-310) rho(.5) b(1) r2(.5)
+
+. assert _rc==498
+
+. // Compare the near-point width SE with the analytic derivative; avoid subtra
+> cting close covariances.
+. preleveldose, beta(1) rho(.5) b(-.5) r2(.5) rholo(.6) rhohi(.6000000001) serh
+> o(.1) seb(.01) corr(.99)
+Diagnostic moments: beta=           1 R2=          .5 b=         -.5 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =           .4 (          40 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          -.5 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          -.5   c_obs =          1.5
+Conditional channel bound =           .4
+Effect set status: bounded
+Ordered set: [         -.2,          -.2]   width =  2.00000e-10
+Endpoint delta SEs:      .196041       .196041
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. assert reldif(r(se_width),r(width)*(.01/.5))<1e-12
+
+. 
+end of do-file
+
+. do tests/collections.do
+
+. // Preserve real user data, sort order, and estimation results during collect
+> ion/export.
+. preserve
+
+. clear
+
+. set obs 20
+Number of observations (_N) was 0, now 20.
+
+. generate double x = _n
+
+. generate double y = 3 + 2*x + mod(_n,3)
+
+. quietly regress y x
+
+. matrix old_b = e(b)
+
+. local old_N = e(N)
+
+. local old_cmd "`e(cmd)'"
+
+. generate byte old_sample = e(sample)
+
+. local original "tests/unrelated.dta"
+
+. quietly save `original', replace
+
+. 
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. preleveldose_collect using "tests/collection small.dta", name("Positive & bas
+> eline_1") replace
+Collected 1 row(s) in tests/collection small.dta
+
+. assert r(rows)==1
+
+. preleveldose, beta(-.4) rho(.8) b(-.5) r2(.3) beta1(-.4) rholo(-.2) rhohi(1.2
+> ) serho(.04) seb(.02) corr(.4)
+Diagnostic moments: beta=         -.4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.8 (         180 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            1
+Secondary: anchor share kappa/beta =           .3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =         -.28
+Conditional channel bound =          .72
+Effect set status: bounded
+Ordered set: [         -.8,            2]   width =          2.8
+Endpoint delta SEs:     .0733212       .133866
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. preleveldose_collect using "tests/collection small.dta", name("Negative b (20
+> %)")
+Collected 2 row(s) in tests/collection small.dta
+
+. assert r(rows)==2
+
+. preleveldose, beta(.4) rho(.5) b(0) r2(0)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. preleveldose_collect using "tests/collection small.dta", name("Zero b: compat
+> ible")
+Collected 3 row(s) in tests/collection small.dta
+
+. preleveldose, beta(.4) rho(2) b(0) r2(0)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>          2
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: empty
+Persistence restriction is incompatible with the supplied moments.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. preleveldose_collect using "tests/collection small.dta", name("Zero b: incomp
+> atible")
+Collected 4 row(s) in tests/collection small.dta
+
+. preleveldose, beta(0) rho(.5) b(1) r2(.5)
+Diagnostic moments: beta=           0 R2=          .5 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            . (           . percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            . (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .25   c_obs =         -.25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. preleveldose_collect using "tests/collection small.dta", name("Zero beta")
+Collected 5 row(s) in tests/collection small.dta
+
+. assert r(rows)==5
+
+. assert _N==20
+
+. assert x==_n
+
+. assert y==3+2*x+mod(_n,3)
+
+. assert "`e(cmd)'"=="`old_cmd'"
+
+. assert e(N)==`old_N'
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("old_b")))
+
+. assert e(sample)==old_sample
+
+. 
+. // Duplicates and unrelated .dta files cannot be silently appended to.
+. preleveldose, beta(1) rho(.5) b(1) r2(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          .25 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .25   c_obs =          .75
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. capture preleveldose_collect using "tests/collection small.dta", name("Zero b
+> eta")
+
+. assert _rc==198
+
+. assert _N==20
+
+. preleveldose, beta(1) rho(.5) b(1) r2(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =          .25 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .25   c_obs =          .75
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. capture preleveldose_collect using `"`original'"', name("No overwrite")
+
+. assert _rc==459
+
+. assert _N==20
+
+. quietly summarize x
+
+. capture preleveldose_collect using "tests/stale.dta", name("Stale result")
+
+. assert _rc==301
+
+. 
+. preleveldose_table using "tests/collection small.dta", saving("tests/collecti
+> on_example.tex") title("Audit & robustness: 20%") label("tab:prelevel_audit")
+>  decimals(3) replace
+(file tests/collection_example.tex not found)
+Exported 5 specifications to tests/collection_example.tex
+
+. assert r(rows)==5
+
+. assert _N==20
+
+. assert e(sample)==old_sample
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("old_b")))
+
+. preleveldose_table using "tests/collection small.dta", saving("tests/collecti
+> on_fragment.tex") replace
+(file tests/collection_fragment.tex not found)
+Exported 5 specifications to tests/collection_fragment.tex
+
+. assert r(rows)==5
+
+. capture preleveldose_table using "tests/collection small.dta", saving("tests/
+> collection_example.tex")
+
+. assert _rc==602
+
+. capture preleveldose_table using "tests/collection small.dta", saving("tests/
+> collection small.dta") replace
+
+. assert _rc==198
+
+. capture preleveldose_table using "tests/collection small.dta", saving("tests/
+> bad.tex") decimals(9)
+
+. assert _rc==198
+
+. capture preleveldose_table using "tests/collection small.dta", saving("tests/
+> bad.tex") label("no:caption")
+
+. assert _rc==198
+
+. capture preleveldose_table using "tests/collection small.dta", saving("tests/
+> bad.tex") title("ok") label("bad label}")
+
+. assert _rc==198
+
+. capture preleveldose_table using `"`original'"', saving("tests/collection_exa
+> mple.tex") replace
+
+. assert _rc==459
+
+. assert _N==20
+
+. 
+. // Confirm escaped text, readable degenerate states, and row-specific cap.
+. tempname fh
+
+. local amp=0
+
+. local allreal=0
+
+. local emptyset=0
+
+. local caps=0
+
+. local unavailable=0
+
+. file open `fh' using "tests/collection_example.tex", read text
+
+. file read `fh' line
+
+. while r(eof)==0 {
+  2.     if strpos(`"`line'"', char(92)+"&") local amp=1
+  3.     if strpos(`"`line'"', "All real") local allreal=1
+  4.     if strpos(`"`line'"', "Empty") local emptyset=1
+  5.     if strpos(`"`line'"', "[-0.200, 1.200]") local caps=1
+  6.     if strpos(`"`line'"', "---") local unavailable=1
+  7.     file read `fh' line
+  8. }
+
+. file close `fh'
+
+. assert `amp' & `allreal' & `emptyset' & `caps' & `unavailable'
+
+. restore
+
+. 
+end of do-file
+
+. do tests/consistency.do
+
+. // Reject both inconsistent examples identified in review.
+. capture preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(1)
+
+. assert _rc==459
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) beta1(-.5)
+
+. assert _rc==459
+
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. assert r(projection_gap)==0
+
+. assert r(rho_imp)==0
+
+. assert "`r(projection_status)'"=="passed"
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) beta1(.742857)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =      .428572
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+
+. assert abs(r(projection_gap))<=r(projection_tol)
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) beta1(.74)
+
+. assert _rc==459
+
+. preleveldose, beta(.4) rho(.5) b(0) r2(0) beta1(.4)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =           .5
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert r(projection_gap)==0
+
+. capture preleveldose, beta(.4) rho(.5) b(0) r2(0) beta1(.5)
+
+. assert _rc==459
+
+. capture preleveldose, beta(.5) rho(.5) b(1) r2(1) beta1(1)
+
+. assert _rc==198
+
+. // A perfect auxiliary fit may still be evaluated as supplied scalar algebra.
+. preleveldose, beta(.5) rho(.5) b(1) r2(1)
+Diagnostic moments: beta=          .5 R2=           1 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            2 (         200 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            1 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =           .5   c_obs =            0
+Conditional channel bound =            1
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. assert "`r(projection_status)'"=="not_checked"
+
+. // Reject before rendering/overwriting; active data are preserved.
+. capture preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(1) saving("tests/rej
+> ected.tex") replace
+
+. assert _rc==459
+
+. capture confirm file "tests/rejected.tex"
+
+. assert _rc==601
+
+. 
+end of do-file
+
+. do tests/diagnostics.do
+
+. version 15.1
+
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3) rhohi(1)
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.8,          1.2]   width =            2
+
+. scalar bound01 = r(channel_bound)
+
+. assert reldif(r(anchor_ratio),3)<1e-12
+
+. assert reldif(r(anchor_percent),300)<1e-12
+
+. assert r(anchor_share)!=r(anchor_ratio)
+
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3) rhohi(2) gamma(.2) window(5) sig
+> ma2(.2) varpre(.4) bwarn(.6)
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =          1.2
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+ALERT: |b| is below your units-dependent threshold; inspect effect-set width.
+AGGREGATION ALERT: declared multi-year means; do not mechanically impose rho0<=
+> 1.
+Working random-walk benchmark: excess=          .4 measured persistence=       
+>   1.4; supplied cap unchanged.
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [        -2.8,          1.2]   width =            4
+
+. assert r(channel_bound)==bound01
+
+. assert reldif(r(working_factor),.8)<1e-12
+
+. assert reldif(r(working_excess),.4)<1e-12
+
+. assert reldif(r(working_rho),1.4)<1e-12
+
+. assert r(rho_hi)==2
+
+. assert reldif(r(rho_imp),1.2)<1e-12
+
+. assert r(weak_b)==1
+
+. assert missing(r(p_equal))
+
+. preleveldose, beta(0) rho(.5) b(0) r2(0) window(3)
+Diagnostic moments: beta=           0 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            . (           . percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            . (see help preleveldose; not t
+> he main reading)
+AGGREGATION ALERT: declared multi-year means; do not mechanically impose rho0<=
+> 1.
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =            0
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert missing(r(anchor_ratio))
+
+. assert "`r(aggregation_status)'"=="inputs_missing"
+
+. preleveldose, beta(.6) rho(.5) b(1) r2(.5) beta1(.7) gamma(.2) window(1) sigm
+> a2(1) varpre(2)
+Diagnostic moments: beta=          .6 R2=          .5 b=           1 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =      .833333 (     83.3333 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =          1.2
+Secondary: anchor share kappa/beta =      .416667 (see help preleveldose; not t
+> he main reading)
+Working random-walk benchmark: excess=           0 measured persistence=       
+>     1; supplied cap unchanged.
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .25   c_obs =          .35
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [         -.5,           .5]   width =            1
+
+. assert r(working_excess)==0
+
+. capture preleveldose, beta(.6) rho(.5) b(1) r2(.5) beta1(.7) gamma(.3)
+
+. assert _rc==459
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) window(0)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) sigma2(1)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) sigma2(-1) varpre(2)
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(.5) b(1) r2(.5) reps(10)
+
+. assert _rc==198
+
+. 
+. preserve
+
+. clear
+
+. set obs 120
+Number of observations (_N) was 0, now 120.
+
+. generate long group = ceil(_n/10)
+
+. generate double baseline = sin(_n*.37)+group*.02
+
+. generate double dose = cos(_n*.71)-.4*baseline
+
+. generate double control = sin(_n*.13)
+
+. generate double change = .3+.25*dose+.12*baseline-.1*control+sin(group*.7)*.2
+> 5+cos(_n*.43)*.2
+
+. export delimited group baseline dose control change using "tests/bootstrap_fi
+> xture.csv", replace
+(file tests/bootstrap_fixture.csv not found)
+file tests/bootstrap_fixture.csv saved
+
+. quietly regress change dose baseline control, vce(cluster group)
+
+. matrix original_b = e(b)
+
+. generate byte original_sample = e(sample)
+
+. scalar expected_gamma = _b[baseline]
+
+. scalar expected_se = _se[baseline]
+
+. scalar expected_pc = ttail(e(df_r),(_b[baseline]-.2)/_se[baseline])
+
+. quietly test baseline=0
+
+. scalar expected_pe = r(p)
+
+. preleveldose_infer, baseline(baseline) rhocap(1.2)
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+>  .90279
+
+. assert reldif(r(p_equal),expected_pe)<1e-10
+
+. assert reldif(r(p_cap),expected_pc)<1e-10
+
+. assert missing(r(p_equal_wild))
+
+. local before_rng `"`c(rngstate)'"'
+
+. preleveldose_infer, baseline(baseline) rhocap(1.2) reps(99) seed(2468)
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+>  .90279
+Null-imposed wild cluster bootstrap p-values:       .25         .9
+
+. scalar pw0 = r(p_equal_wild)
+
+. scalar pwcap = r(p_cap_wild)
+
+. assert inrange(pw0,.01,1) & inrange(pwcap,.01,1)
+
+. assert `"`c(rngstate)'"'==`"`before_rng'"'
+
+. assert e(sample)==original_sample
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("original_b")))
+
+. tempname f
+
+. file open `f' using "tests/bootstrap_results.csv", write text replace
+(file tests/bootstrap_results.csv not found)
+
+. file write `f' "gamma,se,p_equal_wild,p_cap_wild" _n
+
+. file write `f' %21.16g (expected_gamma) "," %21.16g (expected_se) "," %21.16g
+>  (pw0) "," %21.16g (pwcap) _n
+
+. file close `f'
+
+. // Record the uniform stream separately for an independent NumPy CR1 implemen
+> tation.
+. file open `f' using "tests/bootstrap_uniforms.csv", write text replace
+(file tests/bootstrap_uniforms.csv not found)
+
+. file write `f' "h,rep,group,u" _n
+
+. set seed 2468
+
+. forvalues h=1/2 {
+  2.     forvalues j=1/99 {
+  3.         forvalues g=1/12 {
+  4.             local u = runiform()
+  5.             file write `f' "`h',`j',`g'," %21.16g (`u') _n
+  6.         }
+  7.     }
+  8. }
+
+. file close `f'
+
+. set rngstate `before_rng'
+
+. // Derive the diagnostic moments in exactly the controlled model's sample/spa
+> ce.
+. tempname controlled
+
+. estimates store `controlled'
+
+. scalar input_beta1 = _b[dose]
+
+. quietly regress change dose control
+
+. scalar input_beta = _b[dose]
+
+. quietly regress change baseline control
+
+. scalar input_rho = 1+_b[baseline]
+
+. quietly regress dose control
+
+. predict double rd, residuals
+
+. quietly regress baseline control
+
+. predict double rs, residuals
+
+. quietly regress rd rs
+
+. scalar input_b = -_b[rs]
+
+. scalar input_r2 = e(r2)
+
+. quietly summarize rs
+
+. scalar input_varpre = r(Var)
+
+. estimates restore `controlled'
+(results __000001 are active now)
+
+. estimates drop `controlled'
+
+. preleveldose, beta(`=input_beta') rho(`=input_rho') b(`=input_b') r2(`=input_
+> r2') beta1(`=input_beta1') gammafrom(baseline) rhohi(1.2) reps(99) seed(2468)
+>  window(5) sigma2(.2) varpre(`=input_varpre')
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+>  .90279
+Null-imposed wild cluster bootstrap p-values:       .25         .9
+Diagnostic moments: beta=     .197113 R2=     .161283 b=     .442322 rho_obs=  
+>    .999912
+Bound / |beta| (main reading) =      1.84984 (     184.984 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =      1.10385
+Secondary: anchor share kappa/beta =   .000163698 (see help preleveldose; not t
+> he main reading)
+AGGREGATION ALERT: declared multi-year means; do not mechanically impose rho0<=
+> 1.
+Working random-walk benchmark: excess=     .322822 measured persistence=     1.
+> 32282; supplied cap unchanged.
+Pre-level dose: supplied-moment calculation
+Observable kappa =  .0000322671   c_obs =      .197081
+Conditional channel bound =      .364627
+Effect set status: bounded
+Ordered set: [     -2.2606,      .452359]   width =      2.71296
+
+. assert reldif(r(gamma),expected_gamma)<1e-12
+
+. assert reldif(r(p_equal),expected_pe)<1e-10
+
+. assert r(p_equal_wild)==pw0
+
+. assert r(p_cap_wild)==pwcap
+
+. preleveldose_collect using "tests/diagnostics.dta", name("Illustrative cluste
+> red OLS") replace
+Collected 1 row(s) in tests/diagnostics.dta
+
+. preleveldose_table using "tests/diagnostics.dta", saving("tests/diagnostics.t
+> ex") diagnostics title("Diagnostic audit: illustrative data") decimals(4) rep
+> lace
+(file tests/diagnostics.tex not found)
+Exported 1 specifications to tests/diagnostics.tex
+
+. assert e(sample)==original_sample
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("original_b")))
+
+. // Explicit failures for unsupported estimation/inference inputs.
+. capture preleveldose_infer, baseline(no_such_coefficient)
+
+. assert _rc==111
+
+. quietly regress change dose baseline control
+
+. capture preleveldose_infer, baseline(baseline)
+
+. assert _rc==301
+
+. generate double aw = 1+group/12
+
+. quietly regress change dose baseline control [aw=aw], vce(cluster group)
+
+. preleveldose_infer, baseline(baseline)
+Cluster t p-values: gamma=0 (two-sided)    .11561; gamma<=cap-1 (upper-tail)   
+> .057807
+
+. capture preleveldose_infer, baseline(baseline) reps(9)
+
+. assert _rc==198
+
+. quietly regress change baseline, noconstant vce(cluster group)
+
+. preleveldose_infer, baseline(baseline) reps(9) seed(42)
+Cluster t p-values: gamma=0 (two-sided)    .38055; gamma<=cap-1 (upper-tail)   
+>  .19027
+Null-imposed wild cluster bootstrap p-values:        .6         .4
+
+. assert inrange(r(p_equal_wild),.1,1)
+
+. // All-equal cluster-sign draws tie the observed absolute t statistic.
+. // With two clusters these draws are frequent and must count in the tail.
+. generate byte two_groups = 1+(group>6)
+
+. quietly regress change dose baseline control, vce(cluster two_groups)
+
+. set seed 42
+
+. local tied = 0
+
+. forvalues j=1/19 {
+  2.     local s1 = runiform()>.5
+  3.     local s2 = runiform()>.5
+  4.     local tied = `tied'+(`s1'==`s2')
+  5. }
+
+. preleveldose_infer, baseline(baseline) reps(19) seed(42)
+Cluster t p-values: gamma=0 (two-sided)    .57603; gamma<=cap-1 (upper-tail)   
+>  .28801
+Null-imposed wild cluster bootstrap p-values:         1         .5
+
+. assert r(p_equal_wild)>=(1+`tied')/20-1e-12
+
+. quietly regress change dose baseline i.group, vce(cluster group)
+
+. capture preleveldose_infer, baseline(baseline) reps(9)
+
+. assert _rc==198
+
+. restore
+
+. 
+. // Schema-1 collections remain readable and can be extended without losing ro
+> ws.
+. preserve
+
+. use "tests/diagnostics.dta", clear
+
+. keep beta rho_obs b R2 rho_lo rho_hi kappa c_obs anchor_share anchor_gap rho_
+> imp channel_bound L U width dU_drhohi dL_drhohi se_L se_U se_width corr_LU ro
+> w_name set_status se_status
+
+. char _dta[preleveldose_schema] "1"
+
+. save "tests/legacy.dta", replace
+(file tests/legacy.dta not found)
+file tests/legacy.dta saved
+
+. restore
+
+. preleveldose_table using "tests/legacy.dta", saving("tests/legacy.tex") diagn
+> ostics replace
+(file tests/legacy.tex not found)
+Exported 1 specifications to tests/legacy.tex
+
+. preleveldose, beta(1) rho(.5) b(.5) r2(.3)
+Diagnostic moments: beta=           1 R2=          .3 b=          .5 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =           .6 (          60 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =           .3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =           .3   c_obs =           .7
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [          -1,            1]   width =            2
+
+. preleveldose_collect using "tests/legacy.dta", name("New row")
+Collected 2 row(s) in tests/legacy.dta
+
+. assert r(rows)==2
+
+. preleveldose_table using "tests/legacy.dta", saving("tests/legacy.tex") diagn
+> ostics replace
+Exported 2 specifications to tests/legacy.tex
+
+. capture preleveldose, beta(1) rho(.5) b(0) r2(0) gamma(.1)
+
+. assert _rc==459
+
+. 
+end of do-file
+
+. do tests/docx.do
+
+. preleveldose_docx using "tests/collection small.dta", saving("tests/diagnosti
+> cs.docx") title("Audit & comparison: 20%") replace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000003.tmp.docx"
+Word diagnostic report saved to tests/diagnostics.docx
+
+. assert r(rows)==5
+
+. assert "`r(docx_file)'"=="tests/diagnostics.docx"
+
+. confirm file "tests/diagnostics.docx"
+
+. capture preleveldose_docx using "tests/collection small.dta", saving("tests/d
+> iagnostics.docx")
+
+. assert _rc==602
+
+. capture preleveldose_docx using "tests/collection small.dta", saving("tests/c
+> ollection small.dta") replace
+
+. assert _rc==198
+
+. capture preleveldose_docx using "tests/collection small.dta", saving("tests/d
+> iagnostics.docx") decimals(9) replace
+
+. assert _rc==198
+
+. // A report cannot erase a user's active unsaved Word document.
+. putdocx begin
+
+. putdocx paragraph
+
+. putdocx text ("Keep my unsaved document")
+
+. capture preleveldose_docx using "tests/collection small.dta", saving("tests/d
+> iagnostics.docx") replace
+
+. assert _rc==110
+
+. putdocx save "tests/preserved_draft.docx", replace
+successfully created "C:/Users/A/AppData/Local/Temp/pld-trim2/tests/preserved_d
+> raft.docx"
+
+. // UTF-8 and literal special characters travel as data, not injected Stata co
+> de.
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. preleveldose_collect using "tests/unicode.dta", name("重构基准 & 20% <not pub
+> lished>") replace
+Collected 1 row(s) in tests/unicode.dta
+
+. preleveldose_docx using "tests/unicode.dta", saving("tests/unicode.docx") tit
+> le("诊断表 & 比较") replace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000003.tmp.docx"
+Word diagnostic report saved to tests/unicode.docx
+
+. preleveldose_docx using "tests/legacy.dta", saving("tests/legacy.docx") repla
+> ce
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000003.tmp.docx"
+Word diagnostic report saved to tests/legacy.docx
+
+. 
+. // Invalid input cannot truncate an existing report.
+. copy "tests/diagnostics.docx" "tests/protected_before.docx", replace
+(file tests/protected_before.docx not found)
+
+. capture preleveldose_docx using "tests/unrelated.dta", saving("tests/diagnost
+> ics.docx") replace
+
+. assert _rc==459
+
+. 
+end of do-file
+
+. do tests/ols.do
+
+. preserve
+
+. import delimited using "tests/bootstrap_fixture.csv", clear
+(5 vars, 120 obs)
+
+. replace control=. in 13
+(1 real change made, 1 to missing)
+
+. replace baseline=. in 15
+(1 real change made, 1 to missing)
+
+. replace dose=. in 17
+(1 real change made, 1 to missing)
+
+. replace change=. in 19
+(1 real change made, 1 to missing)
+
+. replace group=. in 21
+(1 real change made, 1 to missing)
+
+. generate byte common = group>=2 & _n<=110 & !missing(change,dose,baseline,con
+> trol,group)
+
+. quietly regress change dose baseline control if common, vce(cluster group)
+
+. tempname held
+
+. estimates store `held'
+
+. matrix ols_original_b=e(b)
+
+. generate byte ols_original_sample=e(sample)
+
+. scalar expected_N=e(N)
+
+. scalar expected_b1=_b[dose]
+
+. scalar expected_gamma=_b[baseline]
+
+. quietly regress change dose control if common
+
+. scalar expected_beta=_b[dose]
+
+. quietly regress change baseline control if common
+
+. scalar expected_rho=1+_b[baseline]
+
+. estimates restore `held'
+(results __000000 are active now)
+
+. estimates drop `held'
+
+. preleveldose_ols change dose baseline control if group>=2 in 1/110, cluster(g
+> roup)
+Cluster t p-values: gamma=0 (two-sided)     .1133; gamma<=cap-1 (upper-tail)   
+> .056651
+Diagnostic moments: beta=     .186114 R2=     .122324 b=     .365855 rho_obs=  
+>    1.04441
+Bound / |beta| (main reading) =      1.79649 (     179.649 percent of |beta|)
+  Fieller 95% set for g/beta: [    -2.94881,      -1.0047]
+Own baseline control: implied persistence 1+gamma =      1.12818
+Secondary: anchor share kappa/beta =    -.0797893 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =    -.0148499   c_obs =      .200964
+Conditional channel bound =      .334352
+Effect set status: bounded
+Ordered set: [    -2.85472,     -.121398]   width =      2.73332
+Endpoint delta SEs:      1.01921       .235743
+Delta SEs do not provide weak-denominator-robust coverage.
+Reconstructed baseline OLS; common sample N=95
+Common controls exclude the subsequently added baseline level. This is not auto
+> matically a published specification.
+The added baseline variable is treated as the outcome's OWN baseline level (con
+> trol_type own_baseline).
+
+. assert r(N_common)==expected_N
+
+. assert reldif(r(beta),expected_beta)<1e-12
+
+. assert reldif(r(beta1),expected_b1)<1e-12
+
+. assert reldif(r(rho_obs),expected_rho)<1e-12
+
+. assert reldif(r(gamma),expected_gamma)<1e-12
+
+. assert "`r(origin)'"=="reconstructed_ols"
+
+. assert "`r(projection_status)'"=="passed"
+
+. assert "`r(cmd)'"=="preleveldose"
+
+. assert e(sample)==ols_original_sample
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("ols_original_b")))
+
+. preleveldose_collect using "tests/automatic.dta", name("Reconstructed OLS") r
+> eplace
+Collected 1 row(s) in tests/automatic.dta
+
+. preleveldose_docx using "tests/automatic.dta", saving("tests/automatic.docx")
+>  replace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000004.tmp.docx"
+Word diagnostic report saved to tests/automatic.docx
+
+. assert e(sample)==ols_original_sample
+
+. preleveldose_ols change dose baseline control if common, window(5) sigma2(.2)
+Diagnostic moments: beta=     .186114 R2=     .122324 b=     .365855 rho_obs=  
+>    1.04441
+Bound / |beta| (main reading) =      1.79649 (     179.649 percent of |beta|)
+  Fieller 95% set for g/beta: [    -3.28629,     -.905707]
+Own baseline control: implied persistence 1+gamma =      1.12818
+Secondary: anchor share kappa/beta =    -.0797893 (see help preleveldose; not t
+> he main reading)
+AGGREGATION ALERT: declared multi-year means; do not mechanically impose rho0<=
+> 1.
+Working random-walk benchmark: excess=     .308056 measured persistence=     1.
+> 30806; supplied cap unchanged.
+Pre-level dose: supplied-moment calculation
+Observable kappa =    -.0148499   c_obs =      .200964
+Conditional channel bound =      .334352
+Effect set status: bounded
+Ordered set: [    -2.85472,     -.121398]   width =      2.73332
+Endpoint delta SEs:      .844732       .129165
+Delta SEs do not provide weak-denominator-robust coverage.
+Reconstructed baseline OLS; common sample N=95
+Common controls exclude the subsequently added baseline level. This is not auto
+> matically a published specification.
+The added baseline variable is treated as the outcome's OWN baseline level (con
+> trol_type own_baseline).
+
+. assert missing(r(p_equal))
+
+. assert !missing(r(working_excess))
+
+. assert e(sample)==ols_original_sample
+
+. capture preleveldose_ols change dose baseline control if common, reps(9)
+
+. assert _rc==198
+
+. generate double samebaseline=baseline
+(1 missing value generated)
+
+. capture preleveldose_ols change dose baseline samebaseline if common, cluster
+> (group)
+
+. assert _rc==459
+
+. assert e(sample)==ols_original_sample
+
+. mata: assert(all(st_matrix("e(b)"):==st_matrix("ols_original_b")))
+
+. restore
+
+. 
+. // Exact orthogonality must not be converted to an inconsistent rounded R2.
+. preserve
+
+. clear
+
+. set obs 8
+Number of observations (_N) was 0, now 8.
+
+. generate double baseline = cond(mod(_n,2),-1,1)
+
+. generate double dose = cond(mod(ceil(_n/2),2),-1,1)
+
+. generate double change = .3*dose+.2*baseline+cond(_n<=4,-.1,.1)
+
+. preleveldose_ols change dose baseline
+Diagnostic moments: beta=          .3 R2=           0 b=           0 rho_obs=  
+>        1.2
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller 95% set for g/beta: [    -4.52033,      1.60973]
+Own baseline control: implied persistence 1+gamma =          1.2
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .3
+Conditional channel bound =            0
+Effect set status: empty
+Persistence restriction is incompatible with the supplied moments.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+Reconstructed baseline OLS; common sample N=8
+Common controls exclude the subsequently added baseline level. This is not auto
+> matically a published specification.
+The added baseline variable is treated as the outcome's OWN baseline level (con
+> trol_type own_baseline).
+
+. assert abs(r(b))<1e-12
+
+. assert r(R2)<1e-20
+
+. assert reldif(r(beta),.3)<1e-12
+
+. assert "`r(projection_status)'"=="passed"
+
+. restore
+
+. 
+end of do-file
+
+. do tests/template.do
+
+. // v0.6 reporting template: names, control type, error handling, collections
+. // and exports. Numerical parity with Python is in tests/template_assertions.
+> do.
+. version 15.1
+
+. 
+. // bound_ratio is the main reading; anchor_ratio is kept as an alias.
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3)
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.8,          1.2]   width =            2
+
+. assert reldif(r(bound_ratio),3)<1e-12
+
+. assert r(bound_ratio)==r(anchor_ratio)
+
+. assert r(bound_percent)==r(anchor_percent)
+
+. assert reldif(r(g),.6)<1e-12
+
+. assert reldif(r(gb_ratio),3)<1e-12
+
+. assert "`r(gb_shape)'"=="not_computed"
+
+. assert missing(r(gb_lo)) & missing(r(gb_hi))
+
+. assert "`r(control_type)'"=="none"
+
+. assert missing(r(rho_imp)) & missing(r(one_plus_gamma))
+
+. assert "`r(giv_shape)'"=="not_computed" & missing(r(g_iv))
+
+. // g = -R2/b is zero, not undefined, at b=0; the bound ratio is then zero.
+. preleveldose, beta(.4) rho(.5) b(0) r2(0)
+Diagnostic moments: beta=          .4 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =           .4
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert r(g)==0 & r(bound_ratio)==0
+
+. // Fieller set for g/beta with a precise and an imprecise coefficient.
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) seg(.05) sebeta(.05) corrgb(.2)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller 95% set for g/beta: [     1.16336,      2.00266]
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+
+. assert "`r(gb_shape)'"=="bounded"
+
+. assert r(gb_lo)<r(gb_ratio) & r(gb_ratio)<r(gb_hi)
+
+. assert r(bound_ratio_lo)<=r(bound_ratio) & r(bound_ratio)<=r(bound_ratio_hi)
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) seg(.05) sebeta(.5)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller 95% set for g/beta: (-inf,      -1.0263] U [     .426576, inf): unbou
+> nded
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+
+. assert inlist("`r(gb_shape)'","two_rays","whole_line")
+
+. assert missing(r(bound_ratio_hi))
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) seg(.05)
+
+. assert _rc==198
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) seg(.05) sebeta(-.1)
+
+. assert _rc==198
+
+. 
+. // Own-baseline control: 1+gamma is the implied persistence.
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. assert "`r(control_type)'"=="own_baseline"
+
+. assert r(rho_imp)==0 & r(one_plus_gamma)==0
+
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3) gamma(-.1)
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =           .9
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.8,          1.2]   width =            2
+
+. assert "`r(control_type)'"=="own_baseline"
+
+. assert reldif(r(rho_imp),.9)<1e-12
+
+. // Proxy control: 1+gamma is reported but is NOT a persistence.
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3) gamma(-.1) proxy
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Proxy control: 1+gamma =           .9 is NOT a persistence; report R2 and b aft
+> er partialling the proxy.
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.8,          1.2]   width =            2
+
+. assert "`r(control_type)'"=="proxy"
+
+. assert missing(r(rho_imp))
+
+. assert reldif(r(one_plus_gamma),.9)<1e-12
+
+. assert reldif(r(gamma),-.1)<1e-12
+
+. capture preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5) proxy
+
+. assert _rc==198
+
+. capture preleveldose, beta(1) rho(-.5) b(1) r2(.5) proxy
+
+. assert _rc==198
+
+. // The b=0 consistency check is own-baseline algebra and does not bind a prox
+> y.
+. preleveldose, beta(1) rho(.5) b(0) r2(0) gamma(.1) proxy
+Diagnostic moments: beta=           1 R2=           0 b=           0 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =            0 (           0 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Proxy control: 1+gamma =          1.1 is NOT a persistence; report R2 and b aft
+> er partialling the proxy.
+Secondary: anchor share kappa/beta =            0 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =            0   c_obs =            1
+Conditional channel bound =            0
+Effect set status: all_real
+All real effects are feasible under unrestricted c.
+Zero baseline channel does not imply zero total bias; ratio inference is unavai
+> lable.
+
+. assert reldif(r(one_plus_gamma),1.1)<1e-12
+
+. 
+. // Implied effect at a benchmark persistence: point value without SEs.
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) rhobench(.9)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Implied effect at rho_bench=       .9: tau=         -.2  Fieller shape: not_com
+> puted
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+
+. assert reldif(r(tau_bench),-.2)<1e-12
+
+. assert "`r(tau_shape)'"=="not_computed"
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) rhobench(.9) serho(.03) seb(.02)
+>  corr(0)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Implied effect at rho_bench=       .9: tau=         -.2  Fieller shape: bounded
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:     .0620967      .0877268
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. assert "`r(tau_shape)'"=="bounded"
+
+. assert r(tau_lo)<=-.2 & -.2<=r(tau_hi)
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) sebench(.1)
+
+. assert _rc==198
+
+. 
+. // IV side from moments; errors for irrelevant instruments and bad matrices.
+. preleveldose_iv, rho(.7) czs(.3) czh(-.6) czy(.12)
+Instrumented side: g_IV=cov(Z,S_pre)/cov(Z,H_pre)
+  g_IV =          -.5   beta_IV =          -.2
+  g_IV/beta_IV =          2.5   bound_IV/|beta_IV| =          2.5
+  Q = (rho_obs-1) g_IV/beta_IV =         -.75
+
+. assert reldif(r(g_iv),-.5)<1e-12
+
+. assert reldif(r(beta_iv),-.2)<1e-12
+
+. assert reldif(r(giv_ratio),2.5)<1e-12
+
+. assert reldif(r(Q),-.75)<1e-12
+
+. assert reldif(r(bound_ratio_iv),2.5)<1e-12
+
+. assert "`r(givb_shape)'"=="not_computed"
+
+. capture preleveldose_iv, rho(.7) czs(.3) czh(0) czy(.12)
+
+. assert _rc==498
+
+. matrix pld_bad = I(3)
+
+. capture preleveldose_iv, rho(.7) czs(.3) czh(-.6) czy(.12) v(pld_bad)
+
+. assert _rc==503
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) czs(.3) czh(-.6)
+
+. assert _rc==198
+
+. capture preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) ivv(pld_bad)
+
+. assert _rc==198
+
+. capture preleveldose_fieller, n(1) d(1) vn(1) vd(1) sen(1) sed(1)
+
+. assert _rc==198
+
+. capture preleveldose_fieller, n(1) d(1) vn(1) vd(1) cov(2)
+
+. assert _rc==198
+
+. 
+. // Collections: schema 4 stores the template; proxy rows carry no persistence
+> .
+. preserve
+
+. clear
+
+. set obs 5
+Number of observations (_N) was 0, now 5.
+
+. generate double x = _n
+
+. matrix pld_iv4 = (.0004,0,0,0 \ 0,.0025,0,0 \ 0,0,.0016,0 \ 0,0,0,.0009)
+
+. preleveldose, beta(.4) rho(.8) b(-.5) r2(.3) seg(.05) sebeta(.05) corrgb(.2) 
+> beta1(.7428571428571429) ///
+>     rhobench(.9) serho(.03) seb(.02) corr(0) czs(.3) czh(.6) czy(.4) ivv(pld_
+> iv4)
+Diagnostic moments: beta=          .4 R2=          .3 b=         -.5 rho_obs=  
+>         .8
+Bound / |beta| (main reading) =          1.5 (         150 percent of |beta|)
+  Fieller 95% set for g/beta: [     1.16336,      2.00266]
+Implied effect at rho_bench=       .9: tau=         -.2  Fieller shape: bounded
+IV side: g_IV=          .5 g_IV/beta_IV=         .75 Q=        -.15  Fieller g_
+> IV/beta_IV: bounded
+Own baseline control: implied persistence 1+gamma =      .428571
+Secondary: anchor share kappa/beta =          -.3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.12   c_obs =          .52
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.4,          1.6]   width =            2
+Endpoint delta SEs:     .0620967      .0877268
+Delta SEs do not provide weak-denominator-robust coverage.
+
+. preleveldose_collect using "tests/template.dta", name("Own baseline, IV") rep
+> lace
+Collected 1 row(s) in tests/template.dta
+
+. preleveldose, beta(.2) rho(.6) b(-.5) r2(.3) gamma(-.1) proxy seg(.05) sebeta
+> (.5)
+Diagnostic moments: beta=          .2 R2=          .3 b=         -.5 rho_obs=  
+>         .6
+Bound / |beta| (main reading) =            3 (         300 percent of |beta|)
+  Fieller 95% set for g/beta: (-inf,     -.761029] U [     .500263, inf): unbou
+> nded
+Proxy control: 1+gamma =           .9 is NOT a persistence; report R2 and b aft
+> er partialling the proxy.
+Secondary: anchor share kappa/beta =         -1.2 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =         -.24   c_obs =          .44
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [         -.8,          1.2]   width =            2
+
+. preleveldose_collect using "tests/template.dta", name("Proxy control")
+Collected 2 row(s) in tests/template.dta
+
+. assert r(rows)==2
+
+. assert _N==5
+
+. preleveldose_table using "tests/template.dta", saving("tests/template_table.t
+> ex") replace
+(file tests/template_table.tex not found)
+Exported 2 specifications to tests/template_table.tex
+
+. preleveldose_table using "tests/template.dta", saving("tests/template_diagnos
+> tics.tex") diagnostics replace
+(file tests/template_diagnostics.tex not found)
+Exported 2 specifications to tests/template_diagnostics.tex
+
+. preleveldose_docx using "tests/template.dta", saving("tests/template.docx") r
+> eplace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000004.tmp.docx"
+Word diagnostic report saved to tests/template.docx
+
+. use "tests/template.dta", clear
+
+. assert "`: char _dta[preleveldose_schema]'"=="4"
+
+. assert control_type[1]=="own_baseline" & control_type[2]=="proxy"
+
+. assert missing(rho_imp[2]) & reldif(one_plus_gamma[2],.9)<1e-12
+
+. assert bound_ratio==anchor_ratio
+
+. assert gb_shape[1]=="bounded" & givb_shape[1]!="not_computed" & Q_shape[2]=="
+> not_computed"
+
+. restore
+
+. tempname fh
+
+. local main=0
+
+. local fieller=0
+
+. local dagger=0
+
+. local secondary=0
+
+. local old=0
+
+. file open `fh' using "tests/template_table.tex", read text
+
+. file read `fh' line
+
+. while r(eof)==0 {
+  2.     if strpos(`"`line'"', "main reading") local main=1
+  3.     if strpos(`"`line'"', "Fieller set") local fieller=1
+  4.     if strpos(`"`line'"', "dag") local dagger=1
+  5.     if strpos(`"`line'"', "secondary quantity") local secondary=1
+  6.     if strpos(`"`line'"', "anchor-share benchmark") local old=1
+  7.     file read `fh' line
+  8. }
+
+. file close `fh'
+
+. assert `main' & `fieller' & `dagger' & `secondary' & !`old'
+
+. local panelF=0
+
+. local proxynote=0
+
+. file open `fh' using "tests/template_diagnostics.tex", read text
+
+. file read `fh' line
+
+. while r(eof)==0 {
+  2.     if strpos(`"`line'"', "F. Instrumented side") local panelF=1
+  3.     if strpos(`"`line'"', "Added control: proxy, not a persistence") local
+>  proxynote=1
+  4.     file read `fh' line
+  5. }
+
+. file close `fh'
+
+. assert `panelF' & `proxynote'
+
+. // Legacy schema-3 collections migrate in memory: bound_ratio = anchor_ratio.
+. preserve
+
+. use "tests/template.dta", clear
+
+. drop bound_ratio bound_percent g gb_ratio gb_lo gb_hi bound_ratio_lo bound_ra
+> tio_hi one_plus_gamma rho_bench tau_bench tau_lo tau_hi g_iv beta_iv giv_rati
+> o Q channel_iv bound_iv bound_ratio_iv giv_lo giv_hi givb_lo givb_hi Q_lo Q_h
+> i level gb_shape tau_shape giv_shape givb_shape Q_shape control_type
+
+. replace rho_imp = . in 2
+(0 real changes made)
+
+. char _dta[preleveldose_schema] "3"
+
+. save "tests/template_legacy.dta", replace
+(file tests/template_legacy.dta not found)
+file tests/template_legacy.dta saved
+
+. restore
+
+. preleveldose_table using "tests/template_legacy.dta", saving("tests/template_
+> legacy.tex") diagnostics replace
+(file tests/template_legacy.tex not found)
+Exported 2 specifications to tests/template_legacy.tex
+
+. preleveldose, beta(1) rho(.5) b(.5) r2(.3)
+Diagnostic moments: beta=           1 R2=          .3 b=          .5 rho_obs=  
+>         .5
+Bound / |beta| (main reading) =           .6 (          60 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Secondary: anchor share kappa/beta =           .3 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =           .3   c_obs =           .7
+Conditional channel bound =           .6
+Effect set status: bounded
+Ordered set: [          -1,            1]   width =            2
+
+. preleveldose_collect using "tests/template_legacy.dta", name("New v0.6 row")
+Collected 3 row(s) in tests/template_legacy.dta
+
+. assert r(rows)==3
+
+. display "PASS: v0.6 template checks"
+PASS: v0.6 template checks
+
+. 
+end of do-file
+
+. do examples/full_audit.do
+
+. version 15.1
+
+. // Run from the package directory, preferably in a fresh Stata session.
+. // Synthetic demonstration; these are not results from any published study.
+. adopath ++ "."
+  [1]              "."
+  [2]  (BASE)      "D:\Program Files\Stata 18/ado\base/"
+  [3]  (SITE)      "D:\Program Files\Stata 18/ado\site/"
+  [4]  (PERSONAL)  "C:\Users\A\ado\personal/"
+  [5]  (PLUS)      "C:\Users\A\ado\plus/"
+  [6]  (OLDPLACE)  "c:\ado/"
+
+. preserve
+
+. tempname prior controlled
+
+. capture estimates store `prior'
+
+. local had_estimates = (_rc==0)
+
+. clear
+
+. set obs 120
+Number of observations (_N) was 0, now 120.
+
+. generate long group = ceil(_n/10)
+
+. generate double baseline = sin(_n*.37)+group*.02
+
+. generate double dose = cos(_n*.71)-.4*baseline
+
+. generate double control = sin(_n*.13)
+
+. generate double change = .3+.25*dose+.12*baseline-.1*control+sin(group*.7)*.2
+> 5+cos(_n*.43)*.2
+
+. quietly regress change dose baseline control, vce(cluster group)
+
+. estimates store `controlled'
+
+. local beta1 = _b[dose]
+
+. // All observations are complete here. Real analyses must freeze the common s
+> ample.
+. quietly regress change dose control
+
+. local beta = _b[dose]
+
+. quietly regress change baseline control
+
+. local rho = 1+_b[baseline]
+
+. quietly regress dose control
+
+. predict double rd, residuals
+
+. quietly regress baseline control
+
+. predict double rs, residuals
+
+. quietly summarize rs
+
+. local varpre = r(Var)
+
+. quietly regress rd rs
+
+. local b = -_b[rs]
+
+. local r2 = e(r2)
+
+. estimates restore `controlled'
+(results __000001 are active now)
+
+. estimates drop `controlled'
+
+. // sigma2=.2 is an illustrative assumption, not estimated from these syntheti
+> c data.
+. preleveldose, beta(`beta') rho(`rho') b(`b') r2(`r2') beta1(`beta1') ///
+>     gammafrom(baseline) rhohi(1.2) reps(999) seed(2468) ///
+>     window(5) sigma2(.2) varpre(`varpre')
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+>  .90279
+Null-imposed wild cluster bootstrap p-values:      .217       .881
+Diagnostic moments: beta=     .197113 R2=     .161283 b=     .442322 rho_obs=  
+>    .999912
+Bound / |beta| (main reading) =      1.84984 (     184.984 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =      1.10385
+Secondary: anchor share kappa/beta =   .000163698 (see help preleveldose; not t
+> he main reading)
+AGGREGATION ALERT: declared multi-year means; do not mechanically impose rho0<=
+> 1.
+Working random-walk benchmark: excess=     .322822 measured persistence=     1.
+> 32282; supplied cap unchanged.
+Pre-level dose: supplied-moment calculation
+Observable kappa =  .0000322671   c_obs =      .197081
+Conditional channel bound =      .364627
+Effect set status: bounded
+Ordered set: [     -2.2606,      .452359]   width =      2.71296
+
+. preleveldose_collect using "examples/full_audit.dta", name("Synthetic cluster
+> ed OLS") replace
+Collected 1 row(s) in examples/full_audit.dta
+
+. preleveldose_table using "examples/full_audit.dta", saving("examples/full_aud
+> it.tex") ///
+>     diagnostics title("Full diagnostic audit: synthetic example") replace
+(file examples/full_audit.tex not found)
+Exported 1 specifications to examples/full_audit.tex
+
+. preleveldose_docx using "examples/full_audit.dta", saving("examples/full_audi
+> t.docx") ///
+>     title("Full diagnostic audit: synthetic example") replace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000004.tmp.docx"
+Word diagnostic report saved to examples/full_audit.docx
+
+. restore
+
+. if `had_estimates'  {
+.     estimates restore `prior'
+(results __000000 are active now)
+.     estimates drop `prior'
+. }
+
+. else ereturn clear
+
+. 
+end of do-file
+
+. do tests/install.do
+
+. version 15.1
+
+. local source `"`c(pwd)'"'
+
+. local oldplus `"`c(sysdir_plus)'"'
+
+. capture mkdir tests/install_plus
+
+. capture mkdir tests/install_work
+
+. sysdir set PLUS "`source'/tests/install_plus"
+
+. net install preleveldose, from("`source'") replace
+checking preleveldose consistency and verifying not already installed...
+installing into C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus\...
+installation complete.
+
+. cd "`source'/tests/install_work"
+C:\Users\A\AppData\Local\Temp\pld-trim2\tests\install_work
+
+. adopath - "."
+  [1]  (BASE)      "D:\Program Files\Stata 18/ado\base/"
+  [2]  (SITE)      "D:\Program Files\Stata 18/ado\site/"
+  [3]  (PERSONAL)  "C:\Users\A\ado\personal/"
+  [4]  (PLUS)      "C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/
+> "
+  [5]  (OLDPLACE)  "c:\ado/"
+
+. discard
+
+. findfile preleveldose_docx.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_docx.
+> ado
+
+. findfile preleveldose_ols.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_ols.a
+> do
+
+. findfile preleveldose_infer.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_infer
+> .ado
+
+. findfile preleveldose_infer.sthlp
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_infer
+> .sthlp
+
+. findfile preleveldose_collect.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_colle
+> ct.ado
+
+. findfile preleveldose_table.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_table
+> .ado
+
+. findfile _preleveldose_check.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/_/_preleveldose_chec
+> k.ado
+
+. findfile preleveldose_fieller.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_fiell
+> er.ado
+
+. findfile preleveldose_iv.ado
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_iv.ad
+> o
+
+. findfile preleveldose_fieller.sthlp
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_fiell
+> er.sthlp
+
+. findfile preleveldose_iv.sthlp
+C:\Users\A\AppData\Local\Temp\pld-trim2/tests/install_plus/p/preleveldose_iv.st
+> hlp
+
+. preleveldose_fieller, n(1) d(2) vn(.04) vd(.09) cov(.01)
+Fieller 95% set for N/D (estimate           .5): [     .299005,      .774581]
+
+. assert "`r(shape)'"=="bounded"
+
+. preleveldose_iv, rho(.7) czs(.3) czh(-.6) czy(.12)
+Instrumented side: g_IV=cov(Z,S_pre)/cov(Z,H_pre)
+  g_IV =          -.5   beta_IV =          -.2
+  g_IV/beta_IV =          2.5   bound_IV/|beta_IV| =          2.5
+  Q = (rho_obs-1) g_IV/beta_IV =         -.75
+
+. assert reldif(r(Q),-.75)<1e-12
+
+. preleveldose, beta(1) rho(-.5) b(1) r2(.5) beta1(.5)
+Diagnostic moments: beta=           1 R2=          .5 b=           1 rho_obs=  
+>        -.5
+Bound / |beta| (main reading) =           .5 (          50 percent of |beta|)
+  Fieller set for g/beta not computed: supply seg(), sebeta() and corrgb().
+Own baseline control: implied persistence 1+gamma =            0
+Secondary: anchor share kappa/beta =          .75 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =          .75   c_obs =          .25
+Conditional channel bound =           .5
+Effect set status: bounded
+Ordered set: [          .5,          1.5]   width =            1
+
+. preleveldose_collect using "installed.dta", name("Installed package") replace
+Collected 1 row(s) in installed.dta
+
+. preleveldose_table using "installed.dta", saving("installed.tex") replace
+(file installed.tex not found)
+Exported 1 specifications to installed.tex
+
+. confirm file "installed.tex"
+
+. preleveldose_docx using "installed.dta", saving("installed.docx") replace
+successfully created "C:/Users/A/AppData/Local/Temp/stata_worker_pld-test-e63e2
+> b4a19_92b1979a89_0499ce2aba_gkr4euyl/ST_7754_000003.tmp.docx"
+Word diagnostic report saved to installed.docx
+
+. confirm file "installed.docx"
+
+. preleveldose_table using "installed.dta", saving("installed_diagnostics.tex")
+>  diagnostics replace
+(file installed_diagnostics.tex not found)
+Exported 1 specifications to installed_diagnostics.tex
+
+. preserve
+
+. import delimited using "`source'/tests/bootstrap_fixture.csv", clear
+(5 vars, 120 obs)
+
+. preleveldose_ols change dose baseline control, cluster(group)
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+> .081842
+Diagnostic moments: beta=     .197113 R2=     .161283 b=     .442322 rho_obs=  
+>    .999912
+Bound / |beta| (main reading) =      1.84984 (     184.984 percent of |beta|)
+  Fieller 95% set for g/beta: [    -2.78372,     -1.15513]
+Own baseline control: implied persistence 1+gamma =      1.10385
+Secondary: anchor share kappa/beta =     .0001637 (see help preleveldose; not t
+> he main reading)
+Pre-level dose: supplied-moment calculation
+Observable kappa =  .0000322675   c_obs =      .197081
+Conditional channel bound =      .364627
+Effect set status: bounded
+Ordered set: [     -2.2606,   .000200068]   width =       2.2608
+Endpoint delta SEs:      .738356       .162647
+Delta SEs do not provide weak-denominator-robust coverage.
+Reconstructed baseline OLS; common sample N=120
+Common controls exclude the subsequently added baseline level. This is not auto
+> matically a published specification.
+The added baseline variable is treated as the outcome's OWN baseline level (con
+> trol_type own_baseline).
+
+. assert r(projection_status)=="passed"
+
+. quietly regress change dose baseline control, vce(cluster group)
+
+. preleveldose_infer, baseline(baseline) reps(9) seed(42)
+Cluster t p-values: gamma=0 (two-sided)    .16368; gamma<=cap-1 (upper-tail)   
+> .081842
+Null-imposed wild cluster bootstrap p-values:        .1         .1
+
+. assert inrange(r(p_equal_wild),.1,1)
+
+. restore
+
+. help preleveldose_collect
+
+. help preleveldose_table
+
+. help preleveldose_fieller
+
+. help preleveldose_iv
+
+. cd "`source'"
+C:\Users\A\AppData\Local\Temp\pld-trim2
+
+. sysdir set PLUS "`oldplus'"
+
+. adopath ++ "."
+  [1]              "."
+  [2]  (BASE)      "D:\Program Files\Stata 18/ado\base/"
+  [3]  (SITE)      "D:\Program Files\Stata 18/ado\site/"
+  [4]  (PERSONAL)  "C:\Users\A\ado\personal/"
+  [5]  (PLUS)      "C:\Users\A\ado\plus/"
+  [6]  (OLDPLACE)  "c:\ado/"
+
+. display "PASS: installed commands outside source directory"
+PASS: installed commands outside source directory
+
+. 
+end of do-file
+
+. display "PASS: preleveldose Stata regression checks"
+PASS: preleveldose Stata regression checks
+
+. 
+end of do-file
+
+. log close pldvalidation
+      name:  pldvalidation
+       log:  C:\Users\A\AppData\Local\Temp\pld-trim2\tests/stata18-validation.l
+> og
+  log type:  text
+ closed on:  10 Oct 2026, 02:45:13
+-------------------------------------------------------------------------------

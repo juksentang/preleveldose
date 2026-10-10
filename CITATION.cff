@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it and the methods manuscript listed under references."
+title: "preleveldose: a diagnostic for mean reversion in designs dosed by baseline composition"
+type: software
+authors:
+  - family-names: Tang
+    given-names: Juk-Sen
+    orcid: "https://orcid.org/0009-0009-8849-874X"
+    email: "juksen.tang@mail.mcgill.ca"
+    affiliation: "Beijing Academy of Agriculture and Forestry Sciences; McGill University"
+  - family-names: Gong
+    given-names: Jing
+    orcid: "https://orcid.org/0009-0001-5570-0819"
+    affiliation: "Beijing Academy of Agriculture and Forestry Sciences"
+  - family-names: Chen
+    given-names: Junhong
+    orcid: "https://orcid.org/0009-0007-7201-3408"
+    affiliation: "Beijing Academy of Agriculture and Forestry Sciences"
+version: "0.6"
+date-released: "2026-10-09"
+license: "MIT"
+repository-code: "https://github.com/juksentang/preleveldose"
+keywords:
+  - Stata
+  - shift-share designs
+  - mean reversion
+  - Fieller confidence sets
+references:
+  - type: unpublished
+    title: "Unpublished manuscript"
+    authors:
+      - family-names: Tang
+        given-names: Juk-Sen
+      - family-names: Gong
+        given-names: Jing
+      - family-names: Chen
+        given-names: Junhong
+    year: 2026
+    notes: "Tang, Gong and Chen (2026), unpublished manuscript."
